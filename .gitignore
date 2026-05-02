@@ -1,0 +1,20 @@
+# Entornos y variables secretas
+venv/
+.env
+
+# Bases de datos y Backups de seguridad
+db.sqlite3
+backup*.json
+*.json
+
+# Archivos subidos por usuarios (Fotos, PDFs)
+media/
+
+# Caché de Python (Archivos basura generados automáticamente)
+__pycache__/
+*.pyc
+
+# Archivos de sistema y configuraciones de tu editor de código
+.DS_Store
+.idea/
+.vscode/

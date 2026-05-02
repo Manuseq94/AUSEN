@@ -1,0 +1,130 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestionar Feriados - AUSEN{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* FIX: ENCABEZADOS DE TABLA Y FONDOS EN MODO OSCURO */
+    [data-bs-theme="dark"] .table-light th {
+        background-color: #212529; color: #e9ecef; border-color: #373b3e;
+    }
+    [data-bs-theme="dark"] .bg-white {
+        background-color: #212529 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="py-2">
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+                <strong>{% if message.tags == 'success' %}✅ Éxito:{% else %}ℹ️ Info:{% endif %}</strong> {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row mb-4 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-bold text-body mb-1">📅 Gestión de Feriados</h2>
+            <p class="text-body-secondary mb-0">Administra los días no laborables del año.</p>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            <a href="{% url 'importar_feriados_nacionales' %}" class="btn btn-success shadow fw-bold">
+                <i class="bi bi-cloud-arrow-down-fill me-1"></i> Importar Feriados Nacionales
+            </a>
+        </div>
+    </div>
+    <hr class="mb-5 text-muted">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-5 mb-4">
+            <div class="card shadow border-warning h-100 bg-body">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0 fw-bold fs-5">✍️ Carga Manual</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold text-body">Fecha</label>
+                            {{ form.fecha }}
+                            {% if form.fecha.errors %}
+                                <div class="text-danger small">{{ form.fecha.errors }}</div>
+                            {% endif %}
+                            <div class="form-text small">Para feriados locales o puentes específicos.</div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold text-body">Descripción</label>
+                            {{ form.descripcion }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-warning fw-bold text-dark">
+                                <i class="bi bi-plus-circle"></i> Guardar Feriado
+                            </button>
+                            <a href="{% url 'configuracion' %}" class="btn btn-outline-secondary">
+                                ← Volver a Configuración
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow border-0 bg-body">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold text-body-secondary">Listado ({{ feriados|length }})</h5>
+                    <span class="badge bg-secondary-subtle text-secondary-emphasis border">Año en curso</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light sticky-top">
+                                <tr>
+                                    <th class="ps-4">Fecha</th>
+                                    <th>Festejo</th>
+                                    <th class="text-end pe-4">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for f in feriados %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-primary">{{ f.fecha|date:"d/m/Y" }}</td>
+                                    <td class="text-uppercase small fw-bold text-body-secondary">{{ f.descripcion }}</td>
+                                    <td class="text-end pe-4">
+                                        <form action="{% url 'eliminar_feriado' f.id %}" method="post" class="d-inline">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-sm btn-outline-danger border-0"
+                                                    onclick="return confirm('¿Eliminar el feriado {{ f.descripcion }}?');"
+                                                    title="Eliminar">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-5 text-muted">
+                                        <div class="mb-2 fs-1">📭</div>
+                                        No hay feriados cargados.<br>
+                                        <small>Usa el botón verde para importar los nacionales automáticamente.</small>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

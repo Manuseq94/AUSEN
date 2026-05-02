@@ -1,0 +1,450 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Portal | {{ empleado.nombre }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important; }
+    .bg-gradient-primary { background: linear-gradient(135deg, #0d6efd 0%, #0043a8 100%); }
+    .bg-gradient-success { background: linear-gradient(135deg, #198754 0%, #0a4628 100%); }
+    
+    /* Estilos FullCalendar para modo oscuro/claro */
+    [data-bs-theme="dark"] .fc { color: #fff; }
+    [data-bs-theme="dark"] .fc-theme-standard td,
+    [data-bs-theme="dark"] .fc-theme-standard th { border-color: #444; }
+    .fc-day-today { background-color: rgba(13, 110, 253, 0.1) !important; }
+
+    /* FIX: ENCABEZADOS DE TABLA ADAPTATIVOS */
+    [data-bs-theme="dark"] .table-light th {
+        background-color: #212529; color: #e9ecef; border-color: #373b3e;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+        {% if messages %}
+            {% for message in messages %}
+            <div class="toast align-items-center text-bg-{{ message.tags|cut:'error'|cut:'success'|yesno:'danger,success,primary' }} border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fs-6">
+                        {% if message.tags == 'success' %}<i class="bi bi-check-circle-fill me-2"></i>{% endif %}
+                        {% if message.tags == 'error' %}<i class="bi bi-exclamation-triangle-fill me-2"></i>{% endif %}
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+            {% endfor %}
+        {% endif %}
+    </div>
+
+    <div class="row align-items-center mb-5 mt-4">
+        <div class="col-md-8 d-flex align-items-center gap-3">
+            <div class="avatar-circle shadow-sm bg-primary text-white" style="width: 80px; height: 80px; font-size: 2rem;">
+                {{ empleado.nombre|slice:":1" }}{{ empleado.apellido|slice:":1" }}
+            </div>
+            <div>
+                <h1 class="fw-bold mb-0">¡Hola, {{ empleado.nombre }}! 👋</h1>
+                <p class="text-muted mb-0 fs-5">{{ empleado.cargo }} <span class="mx-2">•</span> {{ empleado.get_sector_display }}</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end mt-3 mt-md-0">
+            {% if user.is_staff or user.empleado == empleado %}
+            <div class="d-flex gap-2 justify-content-md-end">
+                <a href="{% url 'registrar_vacaciones' empleado.id %}" class="btn btn-primary btn-lg shadow-sm">
+                    <i class="bi bi-airplane-fill me-2"></i>Pedir Vacaciones
+                </a>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-lg dropdown-toggle" type="button" data-bs-toggle="dropdown">Más</button>
+                    <ul class="dropdown-menu shadow">
+                        <li><a class="dropdown-item" href="{% url 'registrar_licencia' empleado.id %}">🚑 Reportar Ausencia/Licencia</a></li>
+                        <li><a class="dropdown-item" href="{% url 'registrar_permiso' empleado.id %}">🏡 Home Office / Permiso</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'exportar_historial' empleado.id %}">📥 Descargar Historial</a></li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card bg-gradient-primary text-white border-0 shadow card-hover">
+                <div class="card-body p-4 d-flex flex-column justify-content-between">
+                    <div>
+                        <h6 class="text-uppercase opacity-75 fw-bold ls-1">Saldo Disponible Total</h6>
+                        <h1 class="display-3 fw-bold mb-0">{{ saldo_total }}</h1>
+                    </div>
+                    <div class="mt-3">
+                        <i class="bi bi-calendar-check fs-4 opacity-50"></i>
+                        <span class="ms-2 opacity-75">Días hábiles acumulados</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm mt-3 bg-body">
+                <div class="card-header bg-transparent border-0 fw-bold pt-3 pb-2">
+                    🇦🇷 Próximos Feriados
+                </div>
+                <div class="list-group list-group-flush rounded-bottom">
+                    {% for feriado in proximos_feriados %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                        <small class="text-body-secondary fw-medium">{{ feriado.descripcion }}</small>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis border">{{ feriado.fecha|date:"d M" }}</span>
+                    </div>
+                    {% empty %}
+                    <div class="list-group-item text-muted small bg-transparent">No hay feriados cercanos.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card h-100 border-0 shadow-sm bg-body">
+                <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold">📅 Tu Bolsa de Días</h5>
+                    {% if user.is_staff %}
+                    <a href="{% url 'cargar_saldo_historico' empleado.id %}" class="btn btn-sm btn-warning text-dark fw-bold shadow-sm">+ Ajuste Manual</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% for bolsa in bolsas %}
+                        <div class="col-sm-6 col-lg-4">
+                            <div class="p-3 rounded-3 border bg-body-tertiary d-flex justify-content-between align-items-center h-100 position-relative overflow-hidden">
+                                <div style="z-index: 1;">
+                                    <small class="text-muted text-uppercase fw-bold">Periodo</small>
+                                    <h3 class="mb-0 fw-bold">{{ bolsa.anio }}</h3>
+                                </div>
+                                <div class="text-end" style="z-index: 1;">
+                                    <span class="badge bg-{{ bolsa.dias_restantes|yesno:'success,secondary' }} rounded-pill fs-6 px-3">
+                                        {{ bolsa.dias_restantes }} días
+                                    </span>
+                                </div>
+                                {% if user.is_staff %}
+                                <a href="{% url 'editar_bolsa' bolsa.id %}" class="stretched-link" title="Editar Saldo"></a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4 text-muted">
+                            <i class="bi bi-box-seam fs-1 d-block mb-2"></i> No tienes saldo acumulado.
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm mb-5 bg-body">
+        <div class="card-header bg-transparent border-bottom-0 pt-4 px-4">
+            <ul class="nav nav-tabs card-header-tabs" id="myTab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active fw-bold" data-bs-toggle="tab" data-bs-target="#vacaciones-pane" type="button" role="tab"><i class="bi bi-suitcase-lg me-2"></i>Vacaciones</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-danger" data-bs-toggle="tab" data-bs-target="#licencias-pane" type="button" role="tab"><i class="bi bi-bandaid me-2"></i>Licencias</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-info" data-bs-toggle="tab" data-bs-target="#permisos-pane" type="button" role="tab"><i class="bi bi-house-door me-2"></i>Permisos</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-warning" data-bs-toggle="tab" data-bs-target="#calendario-pane" type="button" role="tab"><i class="bi bi-calendar3 me-2"></i>Calendario</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link fw-bold text-secondary" data-bs-toggle="tab" data-bs-target="#legajo-pane" type="button" role="tab"><i class="bi bi-folder me-2"></i>Legajo</button>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="tab-content" id="myTabContent">
+
+                <div class="tab-pane fade show active" id="vacaciones-pane" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Periodo</th>
+                                    <th class="text-center">Duración</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sol in historial %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="fw-bold">{{ sol.fecha_inicio|date:"d M Y" }} <i class="bi bi-arrow-right mx-1 text-muted"></i> {{ sol.fecha_fin|date:"d M Y" }}</div>
+                                        <small class="text-muted">{{ sol.observaciones|truncatechars:30|default:"Solicitud anual" }}</small>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark border">{{ sol.dias_totales }} días</span>
+                                    </td>
+                                    <td>
+                                        {% if sol.estado == 'APROBADO' %}
+                                            <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle me-1"></i>Aprobado</span>
+                                        {% elif sol.estado == 'PENDIENTE' %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning"><i class="bi bi-hourglass-split me-1"></i>Pendiente</span>
+                                        {% else %}
+                                            <span class="badge bg-danger-subtle text-danger border border-danger">Rechazado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="btn-group">
+                                            {% if sol.estado == 'PENDIENTE' and user.empleado == sol.empleado or user.is_staff and sol.estado == 'APROBADO' %}
+                                                    
+                                                {% if sol.fecha_fin >= hoy %}
+                                                    <a href="{% url 'editar_solicitud' sol.id %}" class="btn btn-sm btn-light border" title="Editar / Interrumpir"><i class="bi bi-pencil"></i></a>
+                                                {% else %}
+                                                    <button class="btn btn-sm btn-light border opacity-50" disabled title="Período Finalizado (Liquidado)"><i class="bi bi-lock-fill text-secondary"></i></button>
+                                                {% endif %}
+                                            {% endif %}
+
+                                            {% if user.is_staff and sol.estado == 'PENDIENTE' %}
+                                                <a href="{% url 'procesar_solicitud' sol.id 'aprobar' %}" class="btn btn-sm btn-success"><i class="bi bi-check-lg"></i></a>
+                                                <a href="{% url 'procesar_solicitud' sol.id 'rechazar' %}" class="btn btn-sm btn-danger"><i class="bi bi-x-lg"></i></a>
+                                            {% endif %}
+
+                                            {% if sol.estado != 'RECHAZADO' %}
+                                                <a href="{% url 'generar_pdf_solicitud' sol.id %}" target="_blank" class="btn btn-sm btn-light border" title="Descargar PDF">
+                                                    <i class="bi bi-file-earmark-pdf text-danger"></i>
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted small">Anulada</span>
+                                            {% endif %}
+
+                                            {% if user.is_staff and sol.estado == 'APROBADO' %}
+                                                <form action="{% url 'eliminar_solicitud' sol.id %}" method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-sm btn-light border text-danger" onclick="return confirm('⚠️ ZONA DE PELIGRO\n\nEstás borrando unas vacaciones YA APROBADAS.\nEl saldo se devolverá a la bolsa.\n\n¿Continuar?');" title="Eliminar registro histórico (Devolver Saldo)">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">Aún no has registrado vacaciones.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="licencias-pane" role="tabpanel">
+                    <div class="table-responsive text-start">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Motivo</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lic in licencias %}
+                                <tr>
+                                    <td class="ps-4"><span class="badge bg-danger">{{ lic.get_tipo_display }}</span></td>
+                                    <td>{{ lic.fecha_inicio|date:"d/m/Y" }}</td>
+                                    <td>{{ lic.estado }}</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a href="{% url 'generar_pdf_licencia' lic.id %}" target="_blank" class="btn btn-sm btn-light border" title="Descargar PDF">
+                                                <i class="bi bi-printer text-primary"></i>
+                                            </a>
+                                            {% if user.is_staff %}
+                                            <form action="{% url 'eliminar_licencia' lic.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-light border text-danger" onclick="return confirm('¿Seguro que deseas eliminar esta licencia del historial?');" title="Eliminar Registro">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">Sin registros.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="permisos-pane" role="tabpanel">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Tipo</th>
+                                    <th>Fecha</th>
+                                    <th>Estado</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for per in permisos %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <span class="badge bg-info text-dark">{{ per.get_tipo_display }}</span>
+                                    </td>
+                                    <td>{{ per.fecha_inicio|date:"d/m/Y" }}</td>
+                                    <td>{{ per.estado }}</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <a href="{% url 'generar_pdf_permiso' per.id %}" target="_blank" class="btn btn-sm btn-light border" title="Descargar PDF">
+                                                <i class="bi bi-printer text-primary"></i>
+                                            </a>
+                                            {% if user.is_staff %}
+                                            <form action="{% url 'eliminar_permiso' per.id %}" method="post" class="d-inline">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-light border text-danger" onclick="return confirm('¿Seguro que deseas eliminar este permiso del historial?');" title="Eliminar Registro">
+                                                    <i class="bi bi-trash"></i>
+                                                </button>
+                                            </form>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted">No hay permisos.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="calendario-pane" role="tabpanel">
+                    <div class="p-4">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3 gap-3">
+                            <h5 class="mb-3 mb-md-0 fw-bold text-body-secondary">
+                                <i class="bi bi-calendar-event me-2"></i>Calendario General
+                            </h5>
+                            <div class="d-flex align-items-center bg-body border p-2 rounded shadow-sm">
+                                <label for="gotoDate" class="me-2 fw-bold text-body-secondary small text-nowrap">Ir a:</label>
+                                <input type="month" id="gotoDate" class="form-control form-control-sm border-0 bg-transparent fw-bold text-body" style="width: auto; cursor: pointer;">
+                            </div>
+                        </div>
+                        <div id='calendar'></div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="legajo-pane" role="tabpanel">
+                    <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+                        <h6 class="mb-0 ms-2">Documentos Digitales</h6>
+                        {% if user.is_staff %}
+                        <button class="btn btn-dark btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#modalSubirDoc"><i class="bi bi-upload me-2"></i>Subir</button>
+                        {% endif %}
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <tbody>
+                                {% for doc in documentos %}
+                                <tr>
+                                    <td class="ps-4"><i class="bi bi-file-earmark-text fs-4 me-2 text-primary"></i>{{ doc.titulo }}</td>
+                                    <td class="text-muted small">{{ doc.fecha_subida|date:"d/m/Y" }}</td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end gap-2">
+                                            <a href="{{ doc.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill px-3">Descargar</a>
+                                            
+                                            {% if user.is_staff %}
+                                            <a href="{% url 'eliminar_documento' doc.id %}" class="btn btn-sm btn-outline-danger rounded-pill px-2" onclick="return confirm('¿Seguro que deseas eliminar el documento: {{ doc.titulo }}?');" title="Eliminar Documento">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="3" class="text-center py-4 text-muted">Legajo vacío.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    {% if user.is_staff %}
+    <div class="accordion mb-5" id="accordionAuditoria">
+        <div class="accordion-item border-dark">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#collapseAudit">
+                    <i class="bi bi-shield-lock-fill me-2"></i> Auditoría de Seguridad
+                </button>
+            </h2>
+            <div id="collapseAudit" class="accordion-collapse collapse" data-bs-parent="#accordionAuditoria">
+                <div class="accordion-body p-0">
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-striped table-sm mb-0 small">
+                            <thead>
+                                <tr>
+                                    <th class="ps-3 sticky-top bg-body" style="z-index: 1;">Fecha</th>
+                                    <th class="sticky-top bg-body" style="z-index: 1;">Autor</th>
+                                    <th class="sticky-top bg-body" style="z-index: 1;">Acción</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in auditorias %}
+                                <tr>
+                                    <td class="ps-3">{{ log.fecha|date:"d/m H:i" }}</td>
+                                    <td class="fw-bold">{{ log.autor.username }}</td>
+                                    <td>{{ log.accion }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if user.is_staff %}
+    <div class="modal fade" id="modalSubirDoc" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Subir Documento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form action="{% url 'subir_documento' empleado.id %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="modal-body">
+                        <div class="mb-3"><label class="form-label">Título</label>{{ form_documento.titulo }}</div>
+                        <div class="mb-3"><label class="form-label">Archivo</label>{{ form_documento.archivo }}</div>
+                    </div>
+                    <div class="modal-footer"><button type="submit" class="btn btn-dark">Guardar</button></div>
+                </form>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
+    
+    <script src="{% static 'core/js/main.js' %}"></script>
+{% endblock %}

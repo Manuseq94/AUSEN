@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% if es_edicion %}Editar Empleado{% else %}Nuevo Empleado{% endif %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-light">
+
+    <div class="container py-5">
+
+        {% if messages %}
+        <div class="row justify-content-center mb-3">
+            <div class="col-md-8">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow border-0">
+
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0 fw-bold">
+                            {% if es_edicion %}
+                            ✏️ Editar Empleado
+                            {% else %}
+                            👤 Alta de Nuevo Empleado
+                            {% endif %}
+                        </h4>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger">
+                                {{ form.non_field_errors }}
+                            </div>
+                            {% endif %}
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Nombre</label>
+                                    {{ form.nombre }}
+                                    <div class="text-danger small">{{ form.nombre.errors }}</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-bold">Apellido</label>
+                                    {{ form.apellido }}
+                                    <div class="text-danger small">{{ form.apellido.errors }}</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">DNI</label>
+                                    {{ form.dni }}
+                                    <div class="text-danger small">{{ form.dni.errors }}</div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Legajo</label>
+                                    {{ form.legajo }}
+
+                                    {% if form.legajo.errors %}
+                                    <div class="text-danger small mt-1 fw-bold">
+                                        ⚠️ {{ form.legajo.errors.as_text }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Fecha Ingreso</label>
+                                    {{ form.fecha_ingreso }}
+                                    <div class="text-danger small">{{ form.fecha_ingreso.errors }}</div>
+                                </div>
+
+                                <div class="col-12">
+                                    <div class="p-3 bg-light rounded border border-primary-subtle">
+                                        <label class="form-label fw-bold text-primary">📧 Email de
+                                            Notificaciones</label>
+                                        {{ form.email }}
+                                        <div class="text-danger small">{{ form.email.errors }}</div>
+                                        <div class="form-text small mt-1">
+                                            Modifica este mail para actualizar a dónde le llegan los avisos.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Sector</label>
+                                    {{ form.sector }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Cargo</label>
+                                    {{ form.cargo }}
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label fw-bold">Localidad</label>
+                                    {{ form.localidad }}
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-check form-switch pt-2">
+                                        {{ form.activo }}
+                                        <label class="form-check-label fw-bold"
+                                            for="{{ form.activo.id_for_label }}">Empleado Activo</label>
+                                    </div>
+                                </div>
+
+                                <div class="col-12">
+                                    <label class="form-label fw-bold">Observaciones</label>
+                                    {{ form.observaciones }}
+                                </div>
+                            </div>
+
+                            <hr class="my-4">
+
+                            <div class="d-flex justify-content-end gap-2">
+                                {% if es_edicion %}
+                                <a href="{% url 'lista_empleados' %}" class="btn btn-outline-secondary">Cancelar</a>
+                                {% else %}
+                                <a href="{% url 'lista_empleados' %}" class="btn btn-outline-secondary">Cancelar</a>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-success fw-bold">
+                                    {% if es_edicion %}
+                                    Guardar Cambios
+                                    {% else %}
+                                    Guardar Empleado
+                                    {% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

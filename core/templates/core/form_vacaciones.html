@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>{% if es_edicion %}Modificar Vacaciones{% else %}Registrar Vacaciones{% endif %}</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm mb-3" role="alert">
+                            <span class="fw-bold">
+                                {% if message.tags == 'error' %}⛔ ERROR:{% else %}✅ INFO:{% endif %}
+                            </span>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="card shadow border-0">
+                    <div class="card-header {% if es_edicion %}bg-warning text-dark{% else %}bg-primary text-white{% endif %} py-3">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">{% if es_edicion %}✏️{% else %}✈️{% endif %}</span>
+                            <div>
+                                <h4 class="mb-0 fw-bold fs-5">
+                                    {% if es_edicion %}Modificar Solicitud{% else %}Registrar Vacaciones{% endif %}
+                                </h4>
+                                <small class="opacity-75">Para: <strong>{{ empleado.apellido }}, {{ empleado.nombre }}</strong></small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                ⛔ {{ error }}
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+
+                        <form method="post">
+                            {% csrf_token %}
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fecha Inicio</label>
+                                {{ form.fecha_inicio }}
+                                {% if form.fecha_inicio.errors %}
+                                    <div class="text-danger small">{{ form.fecha_inicio.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Fecha Fin (Inclusive)</label>
+                                {{ form.fecha_fin }}
+                                {% if form.fecha_fin.errors %}
+                                    <div class="text-danger small">{{ form.fecha_fin.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-4 p-3 bg-light border rounded">
+                                <div class="form-check form-switch">
+                                    {{ form.solo_habiles }}
+                                    <label class="form-check-label fw-bold ms-2" for="{{ form.solo_habiles.id_for_label }}">
+                                        📅 Cálculo Inteligente: ¿Descontar solo días hábiles?
+                                    </label>
+                                </div>
+                                <div class="form-text text-muted mt-2 ms-1">
+                                    <small>
+                                        <i class="bi bi-info-circle"></i>
+                                        <strong>Activado:</strong> Salta fines de semana y feriados.<br>
+                                        <strong>Desactivado:</strong> Cuenta días corridos (Lunes a Lunes).
+                                    </small>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="form-label fw-bold">Observaciones</label>
+                                {{ form.observaciones }}
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a href="{% url 'detalle_empleado' empleado.id %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
+
+                                <button type="submit" class="btn {% if es_edicion %}btn-warning{% else %}btn-primary{% endif %} fw-bold px-4">
+                                    {% if es_edicion %}Guardar Cambios{% else %}Confirmar y Descontar{% endif %}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

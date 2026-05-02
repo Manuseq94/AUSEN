@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+
+{% block title %}Nómina de Personal - AUSEN{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Avatar Circular Pequeño para la tabla */
+        .avatar-sm {
+            width: 38px; height: 38px;
+            background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color);
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        /* Ajustes Dark Mode Tabla */
+        .table-hover tbody tr:hover { background-color: var(--bs-tertiary-bg); }
+
+        /* FIX: ENCABEZADOS DE TABLA OSCUROS EN MODO NOCHE */
+        [data-bs-theme="dark"] .table-light th {
+            background-color: #212529; /* Gris oscuro */
+            color: #e9ecef;            /* Texto claro */
+            border-color: #373b3e;     /* Borde sutil */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">👥 Nómina Completa</h2>
+            <p class="text-muted mb-0">Gestión de legajos y personal activo</p>
+        </div>
+        <a href="{% url 'crear_empleado' %}" class="btn btn-primary shadow-sm fw-bold px-4 rounded-pill">
+            <i class="bi bi-person-plus-fill me-2"></i>Nuevo Empleado
+        </a>
+    </div>
+
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body bg-body rounded-3">
+            <form method="get" class="row g-3 align-items-end">
+
+                <div class="col-md-5">
+                    <label class="form-label small fw-bold text-secondary">BUSCAR</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-body-tertiary border-end-0"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" class="form-control border-start-0" placeholder="Nombre, Apellido o Legajo..." value="{{ filtro_actual.q }}">
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label small fw-bold text-secondary">SECTOR</label>
+                    <select name="sector" class="form-select">
+                        <option value="">Todos los sectores</option>
+                        {% for clave, nombre in opciones_sector %}
+                            <option value="{{ clave }}" {% if filtro_actual.sector == clave %}selected{% endif %}>{{ nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label small fw-bold text-secondary">ORDENAR</label>
+                    <select name="orden" class="form-select">
+                        <option value="">A-Z (Apellido)</option>
+                        <option value="antiguedad_mayor" {% if filtro_actual.orden == 'antiguedad_mayor' %}selected{% endif %}>Mayor Antigüedad</option>
+                        <option value="antiguedad_menor" {% if filtro_actual.orden == 'antiguedad_menor' %}selected{% endif %}>Menor Antigüedad</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2 d-grid gap-2">
+                    <button type="submit" class="btn btn-dark fw-bold">Filtrar</button>
+                    {% if filtro_actual.q or filtro_actual.sector or filtro_actual.orden %}
+                        <a href="{% url 'lista_empleados' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+                    {% endif %}
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow border-0">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4 py-3">Legajo</th>
+                            <th>Apellido y Nombre</th>
+                            <th>Sector</th>
+                            <th>Localidad</th>
+                            <th>Ingreso / Antigüedad</th>
+                            <th class="text-end pe-4">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for emp in empleados %}
+                        <tr>
+                            <td class="ps-4 fw-bold text-secondary">{{ emp.legajo }}</td>
+                            <td>
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="avatar-sm shadow-sm">
+                                        {{ emp.nombre|slice:":1" }}{{ emp.apellido|slice:":1" }}
+                                    </div>
+                                    <div>
+                                        <div class="fw-bold">{{ emp.apellido }}, {{ emp.nombre }}</div>
+                                        <small class="text-muted">{{ emp.cargo }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="badge bg-body-secondary text-body-secondary border">{{ emp.get_sector_display }}</span></td>
+                            <td>{{ emp.localidad }}</td>
+                            <td>
+                                <div>{{ emp.fecha_ingreso|date:"d/m/Y" }}</div>
+                                <small class="text-success fw-bold">{{ emp.antiguedad }} años</small>
+                            </td>
+                            <td class="text-end pe-4">
+                                <div class="btn-group">
+                                    <a href="{% url 'detalle_empleado' emp.id %}" class="btn btn-sm btn-outline-primary fw-bold">
+                                        <i class="bi bi-eye me-1"></i>
+                                    </a>
+
+                                    <a href="{% url 'editar_empleado' emp.id %}" class="btn btn-sm btn-outline-warning text-dark fw-bold" title="Editar datos">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <a href="{% url 'eliminar_empleado' emp.id %}" class="btn btn-sm btn-outline-danger" title="Eliminar" onclick="return confirm('¿Estás seguro de eliminar a este empleado?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
+                                No se encontraron empleados con esos filtros.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-footer bg-body text-muted small py-3">
+            Mostrando <strong>{{ empleados.count }}</strong> empleados activos.
+        </div>
+    </div>
+
+{% endblock %}

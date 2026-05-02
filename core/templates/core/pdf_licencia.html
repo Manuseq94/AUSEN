@@ -1,0 +1,104 @@
+{% extends "core/pdf_base.html" %}
+
+{% block title %}Licencia_{{ empleado.apellido }}{% endblock %}
+
+{% block header_title %}Formulario de Aviso de Ausencia / Licencia{% endblock %}
+{% block header_subtitle %}Departamento de Recursos Humanos{% endblock %}
+
+{% block extra_style %}
+<style>
+    .datos-box {
+        background-color: #f0f0f0;
+        padding: 10px 15px;
+        /* Reducido un poco el padding vertical */
+        border-radius: 5px;
+        margin-bottom: 15px;
+        /* Reducido de 20px a 15px */
+    }
+
+    .row {
+        margin-bottom: 5px;
+    }
+
+    /* Reducido de 10px a 5px */
+    .label {
+        font-weight: bold;
+        width: 150px;
+        display: inline-block;
+    }
+
+    .cuerpo {
+        margin-bottom: 20px;
+        /* Reducido drásticamente de 40px a 20px */
+        text-align: justify;
+    }
+
+    .aviso-medico {
+        border: 1px solid #dc3545;
+        background-color: #fff5f5;
+        color: #a71d2a;
+        padding: 12px;
+        font-size: 10pt;
+        border-radius: 5px;
+        margin-top: 15px;
+        font-weight: bold;
+    }
+
+    /* Sobrescribimos el margen heredado del pdf_base solo para este documento */
+    .firmas {
+        margin-top: 40px !important;
+        /* Reducido a la mitad (era 80px) */
+        width: 100%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="datos-box">
+    <div class="row"><span class="label">Empleado:</span> {{ empleado.apellido }}, {{ empleado.nombre }}</div>
+    <div class="row"><span class="label">DNI:</span> {{ empleado.dni }}</div>
+    <div class="row"><span class="label">Sector:</span> {{ empleado.get_sector_display }}</div>
+    <div class="row"><span class="label">Fecha Solicitud:</span> {{ licencia.fecha_solicitud|default:licencia.fecha_inicio|date:"d/m/Y" }}</div>
+</div>
+
+<div class="cuerpo">
+    <p>Por medio de la presente, notifico mi ausencia en las fechas detalladas a continuación:</p>
+
+    <ul>
+        <li><strong>Motivo de la Ausencia:</strong> {{ licencia.get_tipo_display }}</li>
+        <li><strong>Fecha de Inicio:</strong> {{ licencia.fecha_inicio|date:"d/m/Y" }}</li>
+        <li><strong>Fecha de Fin (inclusive):</strong> {{ licencia.fecha_fin|date:"d/m/Y" }}</li>
+        <li><strong>Total de Días:</strong> {{ licencia.dias_totales }} días</li>
+    </ul>
+
+    {% if licencia.observaciones %}
+    <p><strong>Observaciones adicionales:</strong><br>
+        {{ licencia.observaciones }}</p>
+    {% endif %}
+
+    {% if licencia.tipo == 'ENFERMEDAD' %}
+    <div class="aviso-medico">
+        ⚠️ DECLARACIÓN JURADA:<br>
+        Me comprometo a entregar el Certificado Médico correspondiente dentro de las 48 horas de mi reincorporación,
+        justificando los días de ausencia aquí detallados, conforme a las políticas de la empresa y la ley vigente.
+    </div>
+    {% endif %}
+</div>
+
+<table class="firmas">
+    <tr>
+        <td width="50%">
+            <div class="firma-box">
+                Firma del Empleado<br>
+                <small>{{ empleado.apellido }}, {{ empleado.nombre }}</small>
+            </div>
+        </td>
+        <td width="50%">
+            <div class="firma-box">
+                Aprobado por RRHH / Gerencia<br>
+                <small>Sello y Firma</small>
+            </div>
+        </td>
+    </tr>
+</table>
+{% endblock %}

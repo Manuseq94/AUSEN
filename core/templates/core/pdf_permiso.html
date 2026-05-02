@@ -1,0 +1,125 @@
+{% extends "core/pdf_base.html" %}
+
+{% block title %}Permiso_{{ empleado.apellido }}{% endblock %}
+
+{% block header_title %}Solicitud de Permiso / Ausencia{% endblock %}
+{% block header_subtitle %}Formulario de registro interno - Recursos Humanos{% endblock %}
+
+{% block extra_style %}
+<style>
+    .box {
+        border: 1px solid #ccc;
+        padding: 15px;
+        margin-bottom: 20px;
+        background-color: #f9f9f9;
+        border-radius: 5px;
+    }
+
+    .label {
+        font-weight: bold;
+        font-size: 9pt;
+        color: #666;
+        text-transform: uppercase;
+    }
+
+    .value {
+        font-size: 14pt;
+        margin-bottom: 10px;
+        font-weight: bold;
+        color: #000;
+    }
+
+    .value-small {
+        font-size: 12pt;
+        margin-bottom: 5px;
+        color: #000;
+    }
+
+    .status-aprobado {
+        color: green;
+        border: 1px solid green;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+        font-weight: bold;
+    }
+
+    .status-pendiente {
+        color: orange;
+        border: 1px solid orange;
+        padding: 5px 10px;
+        border-radius: 4px;
+        display: inline-block;
+        font-weight: bold;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="box">
+    <div class="label">Empleado Solicitante</div>
+    <div class="value">{{ empleado.apellido }}, {{ empleado.nombre }}</div>
+
+    <table>
+        <tr>
+            <td><span class="label">DNI:</span> <br> {{ empleado.dni }}</td>
+            <td><span class="label">Sector:</span> <br> {{ empleado.get_sector_display }}</td>
+            <td><span class="label">Fecha Solicitud:</span> <br> {{ permiso.fecha_solicitud|default:permiso.fecha_inicio|date:"d/m/Y" }}</td>
+        </tr>
+    </table>
+</div>
+
+<div class="box">
+    <div class="label">Detalle de la Solicitud</div>
+    <br>
+    <table>
+        <tr>
+            <td width="40%">
+                <span class="label">Tipo de Permiso:</span><br>
+                <span class="value" style="color: #0d6efd;">{{ permiso.get_tipo_display }}</span>
+            </td>
+            <td width="30%">
+                <span class="label">Desde:</span><br>
+                <span class="value-small">{{ permiso.fecha_inicio|date:"d/m/Y" }}</span>
+            </td>
+            <td width="30%">
+                <span class="label">Hasta:</span><br>
+                <span class="value-small">{{ permiso.fecha_fin|date:"d/m/Y" }}</span>
+            </td>
+        </tr>
+    </table>
+
+    <div style="margin-top: 15px; border-top: 1px solid #eee; padding-top: 10px;">
+        <span class="label">Motivo / Observaciones:</span><br>
+        <p style="font-style: italic; background: #fff; padding: 10px; border: 1px solid #eee;">
+            {{ permiso.motivo|default:"Sin observaciones detalladas." }}
+        </p>
+    </div>
+</div>
+
+<div style="text-align: right; margin-top: 20px;">
+    <span class="label">Estado Actual:</span>
+    {% if permiso.estado == 'APROBADO' %}
+    <span class="status-aprobado">AUTORIZADO</span>
+    {% else %}
+    <span class="status-pendiente">PENDIENTE DE APROBACIÓN</span>
+    {% endif %}
+</div>
+
+<table class="firmas">
+    <tr>
+        <td width="50%">
+            <div class="firma-box">
+                Firma del Empleado<br>
+                <small>{{ empleado.apellido }}, {{ empleado.nombre }}</small>
+            </div>
+        </td>
+        <td width="50%">
+            <div class="firma-box">
+                Autorización RRHH / Gerencia<br>
+                <small>Firma y Sello</small>
+            </div>
+        </td>
+    </tr>
+</table>
+{% endblock %}

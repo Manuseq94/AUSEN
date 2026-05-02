@@ -1,0 +1,90 @@
+{% extends "core/pdf_base.html" %}
+
+{% block title %}Vacaciones_{{ empleado.apellido }}{% endblock %}
+
+{% block header_title %}Solicitud Formal de Vacaciones{% endblock %}
+{% block header_subtitle %}Lugar: {{ empleado.localidad }} | Emisión: {{ solicitud.fecha_solicitud|date:"d/m/Y" }}{% endblock %}
+
+{% block extra_style %}
+<style>
+    .content {
+        margin-bottom: 40px;
+        text-align: justify;
+    }
+
+    .breakdown {
+        margin: 20px 0;
+        padding: 15px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        font-size: 11pt;
+    }
+
+    table.sig-table {
+        width: 100%;
+        margin-top: 80px;
+    }
+
+    td.sig-cell {
+        width: 50%;
+        vertical-align: top;
+        padding: 0 20px;
+        text-align: center;
+    }
+
+    .line {
+        border-top: 1px solid black;
+        margin-bottom: 5px;
+        width: 80%;
+        margin-left: 10%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content">
+    <p>
+        Por medio de la presente, <strong>{{ empleado.nombre }} {{ empleado.apellido }}</strong>,
+        DNI N° <strong>{{ empleado.dni }}</strong>, quien se desempeña en el sector
+        <strong>{{ empleado.get_sector_display }}</strong>, solicita formalmente el goce de su licencia anual ordinaria.
+    </p>
+
+    <p>
+        La solicitud comprende un total de <strong>{{ solicitud.dias_totales }} días corridos</strong>,
+        comenzando el día <strong>{{ solicitud.fecha_inicio|date:"d/m/Y" }}</strong>
+        y finalizando el día <strong>{{ solicitud.fecha_fin|date:"d/m/Y" }}</strong> (inclusive).
+    </p>
+
+    <p>A efectos contables, los días se imputarán de la siguiente manera:</p>
+
+    <div class="breakdown">
+        <ul>
+            {% for detalle in detalles %}
+            <li>
+                Se toman <strong>{{ detalle.dias_descontados }} días</strong> correspondientes al período
+                <strong>{{detalle.bolsa.anio }}</strong>.
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <p>Tras esta operación, el empleado queda con un saldo disponible acumulado de <strong>{{ texto_desglose }}</strong> pendientes de goce para futuros períodos.</p>
+</div>
+
+<table class="sig-table">
+    <tr>
+        <td class="sig-cell">
+            <div style="height: 50px;"></div>
+            <div class="line"></div>
+            <strong>{{ empleado.nombre }} {{ empleado.apellido }}</strong><br>
+            Firma del Empleado
+        </td>
+        <td class="sig-cell">
+            <div style="height: 50px;"></div>
+            <div class="line"></div>
+            <strong>Jefe de Área / RRHH</strong><br>
+            Firma y Aclaración
+        </td>
+    </tr>
+</table>
+{% endblock %}

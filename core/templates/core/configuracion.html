@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{% block title %}Configuración - AUSEN{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+    <div>
+        <h2 class="fw-bold mb-1">⚙️ Configuración del Sistema</h2>
+        <p class="text-muted mb-0">Administración avanzada y herramientas críticas</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-5">
+    
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 h-100 card-hover">
+            <div class="card-body p-4 text-center">
+                <div class="display-4 mb-3 text-primary">🔐</div>
+                <h5 class="fw-bold text-dark">Usuarios y Accesos</h5>
+                <p class="text-muted small mb-4">Crea, edita o elimina accesos al sistema y asigna roles de Administrador a personal de RRHH.</p>
+                <a href="{% url 'gestion_usuarios' %}" class="btn btn-primary fw-bold w-100 rounded-pill">Gestionar Usuarios</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 h-100 card-hover">
+            <div class="card-body p-4 text-center">
+                <div class="display-4 mb-3 text-warning">📅</div>
+                <h5 class="fw-bold text-dark">Gestión de Feriados</h5>
+                <p class="text-muted small mb-4">Administra los días no laborables del calendario e importa los feriados nacionales automáticamente.</p>
+                <a href="{% url 'crear_feriado' %}" class="btn btn-warning text-dark fw-bold w-100 rounded-pill">Gestionar Feriados</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 h-100 card-hover">
+            <div class="card-body p-4 text-center">
+                <div class="display-4 mb-3 text-success">📥</div>
+                <h5 class="fw-bold text-dark">Reporte de Saldos (CSV)</h5>
+                <p class="text-muted small mb-4">Descarga una planilla Excel (.csv) con el saldo actual de vacaciones detallado de toda la nómina.</p>
+                <a href="{% url 'exportar_saldos' %}" class="btn btn-outline-success fw-bold w-100 rounded-pill">Descargar Reporte</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-12 mt-5">
+        <div class="card shadow-sm border-danger border-2">
+            <div class="card-header bg-danger bg-opacity-10 border-danger py-3">
+                <h5 class="mb-0 text-danger fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i>Zona de Riesgo (Acciones Masivas)</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold text-dark">⚖️ Generación de Saldos Anuales (LCT)</h5>
+                        <p class="text-muted mb-md-0">
+                            Proceso crítico. El sistema recorrerá <strong>toda la nómina de empleados activos</strong> y les asignará automáticamente los días de vacaciones que les corresponden (14, 21, 28 o 35 días) calculando su antigüedad proyectada al 31 de Diciembre del año en curso. 
+                            <br><em>* Esta acción suele ejecutarse únicamente en el mes de Octubre.</em>
+                        </p>
+                    </div>
+                    <div class="col-md-4 text-md-end">
+                        <a href="{% url 'ejecutar_renovacion' %}" 
+                           class="btn btn-danger btn-lg fw-bold shadow-sm"
+                           onclick="return confirm('⚠️ ZONA DE PELIGRO: GENERACIÓN DE SALDOS (LCT)\n\nEl sistema calculará y creará masivamente los días de vacaciones correspondientes para TODOS los empleados activos.\n\n¿Estás completamente seguro de ejecutar esta acción ahora?');">
+                            Ejecutar Proceso LCT
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<div class="col-md-6 col-lg-4">
+    <div class="card shadow-sm border-0 h-100 card-hover">
+        <div class="card-body p-4 text-center">
+            <div class="display-4 mb-3 text-secondary">📜</div>
+            <h5 class="fw-bold text-dark">Auditoría Global</h5>
+            <p class="text-muted small mb-4">Revisa todos los movimientos realizados por los administradores en el sistema.</p>
+            <a href="{% url 'historial_general' %}" class="btn btn-outline-secondary fw-bold w-100 rounded-pill">Ver Historial</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card-hover { transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card-hover:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+</style>
+{% endblock %}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Saldos - AUSEN</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍃</text></svg>">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow mb-4" role="alert">
+                            <span class="fw-bold">
+                                {% if message.tags == 'error' %}⛔ ERROR:{% elif message.tags == 'success' %}✅ ÉXITO:{% endif %}
+                            </span>
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div class="card shadow border-0 rounded-4">
+                    <div class="card-header bg-dark text-white py-3 rounded-top-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="fs-4">⚖️</span>
+                            <div>
+                                <h5 class="mb-0 fw-bold">Gestión Manual de Saldos</h5>
+                                <small class="opacity-75">Empleado: {{ empleado.nombre }} {{ empleado.apellido }}</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4">
+
+                        {% if consumo > 0 %}
+                        <div class="alert alert-warning shadow-sm mb-4 border-start border-5 border-warning">
+                            <div class="d-flex gap-3 align-items-center">
+                                <span class="fs-2">🧠</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1 text-dark">Cálculo Automático Activo</h6>
+                                    <p class="mb-0 small text-dark">
+                                        Este empleado ya consumió <strong>{{ consumo }} días</strong> de este periodo.
+                                        <br>
+                                        👉 Por favor, ingresa el <strong>TOTAL DE ANTIGÜEDAD</strong> (ej: 14).
+                                        <br>
+                                        <em>El sistema restará el consumo automáticamente al guardar.</em>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        <form method="post">
+                            {% csrf_token %}
+
+                            {% for field in form %}
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-secondary small">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small mt-1">❌ {{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endfor %}
+
+                            <div class="alert alert-info d-flex align-items-center gap-2 mt-4" role="alert">
+                                <span class="fs-4">ℹ️</span>
+                                <div class="small">
+                                    Recuerda: Solo puedes cargar años <strong>anteriores o actuales</strong> (según la fecha de hoy).
+                                </div>
+                            </div>
+
+                            <div class="d-grid gap-2 mt-4">
+                                <button type="submit" class="btn btn-primary fw-bold py-2">
+                                    💾 Guardar Saldo
+                                </button>
+                                <a href="{% url 'detalle_empleado' empleado.id %}" class="btn btn-outline-secondary">
+                                    Cancelar y Volver
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% block title %}Historial General - AUSEN{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+    <div>
+        <h2 class="fw-bold mb-1">📜 Historial de Movimientos</h2>
+        <p class="text-muted mb-0">Registro global de acciones del sistema</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2">
+            <div class="col-md-10">
+                <input type="text" name="q" class="form-control" placeholder="Buscar por usuario, empleado o acción..." value="{{ busqueda_actual }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-dark w-100">Filtrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th class="ps-4">Fecha y Hora</th>
+                    <th>Responsable</th>
+                    <th>Empleado Afectado</th>
+                    <th>Acción Realizada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td class="ps-4 text-muted small">{{ log.fecha|date:"d/m/Y H:i" }}</td>
+                    <td class="fw-bold text-primary">@{{ log.autor.username }}</td>
+                    <td>{{ log.empleado.apellido }}, {{ log.empleado.nombre }}</td>
+                    <td>{{ log.accion }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center py-5 text-muted">No se encontraron registros.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

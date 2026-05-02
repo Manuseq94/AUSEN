@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+
+{% block title %}Editar Empleado - AUSEN{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-4">
+    <div class="col-md-8">
+        <div class="card shadow border-0">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0 fw-bold">✏️ Editando a {{ empleado.nombre }} {{ empleado.apellido }}</h5>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+                        {% for field in form %}
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="form-text small opacity-75">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-flex gap-2 mt-4 justify-content-end border-top pt-3">
+                        <a href="{% url 'lista_empleados' %}" class="btn btn-outline-secondary border-0">Cancelar</a>
+                        <button type="submit" class="btn btn-primary fw-bold px-4">Guardar Cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

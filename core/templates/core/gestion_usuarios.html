@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}Usuarios y Accesos - AUSEN{% endblock %}
+
+{% block extra_css %}
+    <style>
+        /* Estilos específicos para esta página */
+
+        /* Avatar pequeño para la tabla */
+        .avatar-sm {
+            width: 38px; height: 38px;
+            background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color);
+            border-radius: 50%; display: flex;
+            align-items: center; justify-content: center;
+            font-weight: bold; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+
+        /* Ajuste Dark Mode Tabla */
+        .table-hover tbody tr:hover { background-color: var(--bs-tertiary-bg); }
+
+        /* FIX: ENCABEZADOS DE TABLA OSCUROS EN MODO NOCHE */
+        [data-bs-theme="dark"] .table-light th {
+            background-color: #212529; /* Gris oscuro */
+            color: #e9ecef;            /* Texto claro */
+            border-color: #373b3e;     /* Borde sutil */
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="card shadow-sm border-0 h-100 bg-body">
+                <div class="card-header bg-body py-3 border-bottom">
+                    <h5 class="mb-0 fw-bold text-primary"><i class="bi bi-person-plus-fill me-2"></i>Crear Nuevo Acceso</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-4">
+                        Vincula un empleado existente o crea un administrador del sistema (sin legajo).
+                    </p>
+
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Vincular a Empleado</label>
+                            {{ form.empleado }}
+                            <div class="form-text small opacity-75">Deja en "Ninguno" si es solo soporte/IT.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Nombre de Usuario</label>
+                            {{ form.username }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Email (Para avisos)</label>
+                            {{ form.email }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold small text-secondary">Contraseña</label>
+                            {{ form.password }}
+                        </div>
+
+                        <div class="mb-4 form-check bg-body-tertiary p-3 rounded border">
+                            {{ form.es_admin }}
+                            <label class="form-check-label fw-bold ms-2">
+                                ¿Es Administrador (RRHH)?
+                            </label>
+                            <div class="form-text small mt-1">Podrá aprobar vacaciones y ver todo.</div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary fw-bold shadow-sm">
+                                <i class="bi bi-save me-2"></i>Crear Usuario
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="card shadow-sm border-0 h-100 bg-body">
+                <div class="card-header bg-body py-3 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-people-fill me-2"></i>Usuarios Activos</h5>
+
+                    <form class="d-flex" role="search" method="get">
+                        <div class="input-group">
+                            <input class="form-control form-control-sm bg-body-tertiary border-secondary-subtle" type="search" name="q" placeholder="Buscar usuario..." value="{{ busqueda_actual }}">
+                            <button class="btn btn-outline-secondary btn-sm" type="submit"><i class="bi bi-search"></i></button>
+                            {% if busqueda_actual %}
+                                <a href="{% url 'gestion_usuarios' %}" class="btn btn-outline-danger btn-sm" title="Limpiar"><i class="bi bi-x-lg"></i></a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">Identidad</th>
+                                    <th>Usuario</th>
+                                    <th>Rol</th>
+                                    <th class="text-end pe-4">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for u in usuarios %}
+                                <tr>
+                                    <td class="ps-4">
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="avatar-sm shadow-sm">
+                                                {% if u.empleado %}
+                                                    {{ u.empleado.nombre|slice:":1" }}{{ u.empleado.apellido|slice:":1" }}
+                                                {% else %}
+                                                    <i class="bi bi-display"></i>
+                                                {% endif %}
+                                            </div>
+
+                                            <div>
+                                                {% if u.empleado %}
+                                                    <div class="fw-bold">{{ u.empleado.apellido }}, {{ u.empleado.nombre }}</div>
+                                                    <small class="text-muted">Legajo: {{ u.empleado.legajo }}</small>
+                                                {% else %}
+                                                    <div class="fw-bold">Sistema / IT</div>
+                                                    <small class="text-muted fst-italic">Sin legajo</small>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-bold text-primary">@{{ u.username }}</div>
+                                        {% if u.email %}
+                                            <small class="text-muted">{{ u.email }}</small>
+                                        {% else %}
+                                            <small class="text-danger opacity-75">Sin email</small>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if u.is_staff %}
+                                            <span class="badge bg-warning text-dark border border-warning"><i class="bi bi-crown me-1"></i>Admin</span>
+                                        {% else %}
+                                            <span class="badge bg-body-secondary text-body-secondary border">Empleado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <div class="d-flex justify-content-end align-items-center gap-2">
+
+                                            <a href="{% url 'editar_usuario' u.id %}"
+                                               class="btn btn-sm btn-outline-primary border-0"
+                                               title="Editar Email/Rol">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+
+                                            {% if u.id == user.id %}
+                                                <span class="badge bg-secondary opacity-50" title="No puedes borrarte a ti mismo">Tú</span>
+                                            {% else %}
+                                                {% if u.empleado %}
+                                                    <a href="{% url 'eliminar_usuario' u.empleado.id %}"
+                                                       class="btn btn-sm btn-outline-danger border-0"
+                                                       onclick="return confirm('ATENCIÓN:\n\nVas a eliminar el acceso de {{ u.empleado.nombre }}.\nYa no podrá entrar al sistema, pero su historial de vacaciones se mantiene.\n\n¿Estás seguro?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% else %}
+                                                    <a href="{% url 'eliminar_usuario_sistema' u.id %}"
+                                                       class="btn btn-sm btn-outline-danger border-0"
+                                                       onclick="return confirm('⚠️ ESTÁS ELIMINANDO UN ADMINISTRADOR DEL SISTEMA.\n\nUsuario: {{ u.username }}\n\nEsta acción no se puede deshacer. ¿Continuar?');">
+                                                        <i class="bi bi-trash"></i>
+                                                    </a>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">
+                                        <i class="bi bi-search fs-1 d-block mb-2 opacity-50"></i>
+                                        No se encontraron usuarios.
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-body text-muted small text-center">
+                    Mostrando {{ usuarios.count }} usuarios con acceso.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
