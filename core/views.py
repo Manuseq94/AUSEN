@@ -1328,12 +1328,21 @@ def editar_solicitud(request, solicitud_id):
 def eliminar_solicitud(request, solicitud_id):
     solicitud = get_object_or_404(SolicitudVacaciones, pk=solicitud_id)
     empleado = solicitud.empleado
+    hoy = timezone.now().date()  # 📅 Traemos el día de hoy para comparar
 
+    # 1. CANDADO DE SEGURIDAD 🔒
+    # Solo RRHH puede eliminar. El empleado debe pedirlo.
     if not request.user.is_staff:
         messages.error(request, "⛔ No puedes eliminar una solicitud. Contacta a RRHH para que la rechacen.")
         return redirect('detalle_empleado', empleado_id=empleado.id)
 
+    # 👇 NUEVO CANDADO AUTOMÁTICO: PROHIBIDO BORRAR EL PASADO 👇
+    if solicitud.fecha_fin < hoy:
+        messages.error(request, "⛔ PROHIBIDO: No puedes eliminar vacaciones que ya finalizaron y fueron tomadas por el empleado.")
+        return redirect('detalle_empleado', empleado_id=empleado.id)
+
     if request.method == 'POST':
+        # 2. LÓGICA DE DEVOLUCIÓN INTELIGENTE 🧠
         detalles = solicitud.detalles.all()
         dias_devueltos = 0
 
@@ -1348,7 +1357,7 @@ def eliminar_solicitud(request, solicitud_id):
         else:
             mensaje_accion = "La solicitud estaba PENDIENTE, no afectó el saldo."
 
-        # --- 🕵️‍♂️ AUDITORÍA ---
+        # 3. LOG DE AUDITORÍA
         AuditoriaSaldo.objects.create(
             autor=request.user,
             empleado=empleado,
