@@ -1398,18 +1398,26 @@ def importar_feriados_nacionales(request):
 def eliminar_licencia(request, licencia_id):
     licencia = get_object_or_404(Licencia, pk=licencia_id)
     empleado = licencia.empleado
+    hoy = timezone.now().date()  # 📅 Traemos el día de hoy para comparar
 
+    # 1. Seguridad: Solo RRHH
     if not request.user.is_staff:
         messages.error(request, "⛔ Solo RRHH puede eliminar registros.")
         return redirect('detalle_empleado', empleado_id=empleado.id)
 
+    # 👇 NUEVO CANDADO AUTOMÁTICO: PROHIBIDO BORRAR EL PASADO 👇
+    if licencia.fecha_fin < hoy:
+        messages.error(request, "⛔ PROHIBIDO: No puedes eliminar licencias del pasado que ya finalizaron.")
+        return redirect('detalle_empleado', empleado_id=empleado.id)
+
     if request.method == 'POST':
-        # --- 🕵️‍♂️ AUDITORÍA ---
+        # 2. Auditoría: Registramos quién lo borró y qué borró
         AuditoriaSaldo.objects.create(
             autor=request.user,
             empleado=empleado,
             accion=f"🗑️ @{request.user.username} eliminó la licencia de '{licencia.get_tipo_display()}' de {empleado.nombre} {empleado.apellido} (del {licencia.fecha_inicio} al {licencia.fecha_fin})."
         )
+        # 3. Borrado físico
         licencia.delete()
         messages.success(request, "🗑️ Licencia eliminada correctamente.")
 
@@ -1421,18 +1429,26 @@ def eliminar_licencia(request, licencia_id):
 def eliminar_permiso(request, permiso_id):
     permiso = get_object_or_404(Permiso, pk=permiso_id)
     empleado = permiso.empleado
+    hoy = timezone.now().date()  # 📅 Traemos el día de hoy para comparar
 
+    # 1. Seguridad: Solo RRHH
     if not request.user.is_staff:
         messages.error(request, "⛔ Solo RRHH puede eliminar registros.")
         return redirect('detalle_empleado', empleado_id=empleado.id)
 
+    # 👇 NUEVO CANDADO AUTOMÁTICO: PROHIBIDO BORRAR EL PASADO 👇
+    if permiso.fecha_fin < hoy:
+        messages.error(request, "⛔ PROHIBIDO: No puedes eliminar permisos del pasado que ya finalizaron.")
+        return redirect('detalle_empleado', empleado_id=empleado.id)
+
     if request.method == 'POST':
-        # --- 🕵️‍♂️ AUDITORÍA ---
+        # 2. Auditoría: Registramos quién lo borró y qué borró
         AuditoriaSaldo.objects.create(
             autor=request.user,
             empleado=empleado,
             accion=f"🗑️ @{request.user.username} eliminó el permiso de '{permiso.get_tipo_display()}' de {empleado.nombre} {empleado.apellido} (del {permiso.fecha_inicio} al {permiso.fecha_fin})."
         )
+        # 3. Borrado físico
         permiso.delete()
         messages.success(request, "🗑️ Permiso eliminado correctamente.")
 
