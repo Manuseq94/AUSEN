@@ -9,6 +9,7 @@
 
 ![Python](https://img.shields.io/badge/Python-3.10-blue?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-5.0-092E20?style=for-the-badge&logo=django&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Apto-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 ![Bootstrap](https://img.shields.io/badge/Bootstrap-5-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
 ![Status](https://img.shields.io/badge/Status-En_Producción-success?style=for-the-badge)
 
@@ -67,17 +68,23 @@ El objetivo principal es brindar transparencia a los empleados sobre sus días d
 
 ## 🛠️ Stack Tecnológico
 
-* **Backend:** Python, Django Framework.
-* **Librerías Clave:** `holidays` (Cálculo de fechas), `xhtml2pdf` (Reportes).
-* **Base de Datos:** PostgreSQL (Producción) / SQLite (Local).
+* **Backend:** Python 3.10, Django Framework 5.x.
+* **Servidor de Producción:** Gunicorn (WSGI HTTP Server).
+* **Contenedores:** Docker (Imagen base `python:3.10-slim` optimizada con dependencias nativas para Cairo).
+* **Librerías Clave:** `holidays` (Cálculo de fechas), `xhtml2pdf` / `pycairo` (Generación de reportes PDF).
+* **Base de Datos:** PostgreSQL (Producción en Neon.tech) / SQLite (Local).
 * **Frontend:** HTML5, CSS3, Bootstrap 5.3, JavaScript.
-* **Gráficos:** Chart.js, FullCalendar.
-* **Despliegue:** Render + Neon.tech (Gunicorn & WhiteNoise).
+* **Gráficos y Calendarios:** Chart.js, FullCalendar.
+* **Despliegue e Infraestructura:** Render (Web Service basado en Docker + WhiteNoise para estáticos).
 * **Control de Versiones:** Git & GitHub.
 
-## 🚀 Instalación y Despliegue Local
+---
 
-Si deseas correr este proyecto en tu entorno local, sigue estos pasos:
+## 🚀 Instalación y Despliegue
+
+### Opción A: Despliegue Rápido con Docker (Recomendado) 🐳
+
+Al estar el proyecto dockerizado, no necesitas preocuparte por instalar dependencias locales de C (requeridas por `pycairo`) ni versiones específicas de Python.
 
 1. **Clonar el repositorio**
    ```bash
