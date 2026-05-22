@@ -28,4 +28,4 @@ EXPOSE 8000
 
 # Comando para encender el motor de la app
 # IMPORTANTE: Reemplazá 'nombre_de_tu_proyecto' por el nombre de la carpeta donde está tu archivo wsgi.py (suele llamarse 'ausen' o 'config')
-CMD ["gunicorn", "AUSEN.wsgi:application", "--bind", "0.0.0.0:8000"]
+CMD ["gunicorn", "gestion_vacaciones.wsgi:application", "--bind", "0.0.0.0:8000"]
