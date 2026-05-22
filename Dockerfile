@@ -8,6 +8,14 @@ ENV PYTHONUNBUFFERED=1
 # Creamos la carpeta de trabajo dentro del contenedor
 WORKDIR /app
 
+# 👇 NUEVO: Instalamos los compiladores y librerías C que necesita pycairo/xhtml2pdf
+RUN apt-get update && apt-get install -y \
+    gcc \
+    pkg-config \
+    libcairo2-dev \
+    && rm -rf /var/lib/apt/lists/*
+# 👆 El rm -rf final es para borrar la caché de descargas de Linux y mantener el contenedor liviano
+
 # Copiamos solo el requirements primero para aprovechar el caché de Docker
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
