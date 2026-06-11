@@ -12,6 +12,7 @@ import holidays
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
+from django.db.models import Q
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 
@@ -124,6 +125,23 @@ class Empleado(models.Model):
             'Mantenimiento': '#dc3545'
         }
         return colores.get(self.sector, '#6c757d')
+    
+    def tiene_ausencia_aprobada(self, inicio, fin, excluir_vacacion_id=None, excluir_licencia_id=None):
+        """
+        Verifica si el empleado ya tiene ausencias (vacaciones o licencias) aprobadas
+        que se superpongan con el rango de fechas solicitado.
+        """
+        # 1. Chequeamos Vacaciones
+        q_vacas = self.solicitudes.filter(estado='APROBADO', fecha_inicio__lte=fin, fecha_fin__gte=inicio)
+        if excluir_vacacion_id:
+            q_vacas = q_vacas.exclude(id=excluir_vacacion_id)
+
+        # 2. Chequeamos Licencias
+        q_lics = self.licencias.filter(estado='APROBADO', fecha_inicio__lte=fin, fecha_fin__gte=inicio)
+        if excluir_licencia_id:
+            q_lics = q_lics.exclude(id=excluir_licencia_id)
+
+        return q_vacas.exists() or q_lics.exists()
 
 
 class BolsaVacaciones(models.Model):
@@ -269,6 +287,37 @@ class SolicitudVacaciones(models.Model):
 
     def __str__(self):
         return f"{self.empleado} ({self.fecha_inicio} al {self.fecha_fin})"
+    
+    def ejecutar_aprobacion_y_descuento(self):
+        """
+        Encapsula toda la lógica transaccional de aprobar una vacación y descontar el saldo.
+        Retorna (True, "") si fue exitoso, o (False, "mensaje de error") si falló.
+        """
+        with transaction.atomic():
+            saldo_total = self.empleado.bolsas.filter(dias_restantes__gt=0).aggregate(
+                total=models.Sum('dias_restantes'))['total'] or 0
+
+            if saldo_total < self.dias_totales:
+                self.estado = 'RECHAZADO'
+                self.save(update_fields=['estado'])
+                return False, f"Saldo insuficiente. Tiene {saldo_total} días, pero requiere {self.dias_totales}."
+
+            dias_a_descontar = self.dias_totales
+            bolsas = self.empleado.bolsas.filter(dias_restantes__gt=0).select_for_update().order_by('anio')
+
+            for bolsa in bolsas:
+                if dias_a_descontar == 0: 
+                    break
+                descuento = min(bolsa.dias_restantes, dias_a_descontar)
+                bolsa.dias_restantes -= descuento
+                bolsa.save(update_fields=['dias_restantes'])
+                
+                ConsumoDetalle.objects.create(solicitud=self, bolsa=bolsa, dias_descontados=descuento)
+                dias_a_descontar -= descuento
+
+            self.estado = 'APROBADO'
+            self.save(update_fields=['estado'])
+            return True, "Aprobación exitosa."
 
 
 class ConsumoDetalle(models.Model):

@@ -472,16 +472,9 @@ def procesar_licencia(request, licencia_id, accion):
     empleado = licencia.empleado
 
     if accion == 'aprobar':
-        superposicion_vac = SolicitudVacaciones.objects.filter(
-            empleado=empleado, estado='APROBADO', fecha_inicio__lte=licencia.fecha_fin, fecha_fin__gte=licencia.fecha_inicio
-        ).exists()
-
-        superposicion_lic = Licencia.objects.filter(
-            empleado=empleado, estado='APROBADO', fecha_inicio__lte=licencia.fecha_fin, fecha_fin__gte=licencia.fecha_inicio
-        ).exclude(id=licencia.id).exists()
-
-        if superposicion_vac or superposicion_lic:
-            print(f"❌ ERROR: {empleado.apellido} ya tiene una ausencia aprobada en esas fechas.")
+        # 🔥 ACÁ ACTÚA EL FAT MODEL: Una sola línea resuelve toda la lógica compleja
+        if empleado.tiene_ausencia_aprobada(licencia.fecha_inicio, licencia.fecha_fin, excluir_licencia_id=licencia.id):
+            messages.error(request, f"⛔ ERROR: {empleado.apellido} ya tiene una ausencia aprobada en esas fechas.")
             return redirect('dashboard')
 
         licencia.estado = 'APROBADO'
@@ -502,11 +495,10 @@ def procesar_licencia(request, licencia_id, accion):
     elif accion == 'rechazar':
         licencia.estado = 'RECHAZADO'
         licencia.save()
-
+        
         # --- 🕵️‍♂️ AUDITORÍA ---
         AuditoriaSaldo.objects.create(
-            autor=request.user,
-            empleado=empleado,
+            autor=request.user, empleado=empleado,
             accion=f"❌ @{request.user.username} rechazó la licencia de '{licencia.get_tipo_display()}' para {empleado.nombre} {empleado.apellido}."
         )
 
@@ -529,69 +521,41 @@ def procesar_solicitud(request, solicitud_id, accion):
         solicitud.estado = 'RECHAZADO'
         solicitud.save()
 
-        # --- 🕵️‍♂️ AUDITORÍA ---
         AuditoriaSaldo.objects.create(
-            autor=request.user, 
-            empleado=empleado,
+            autor=request.user, empleado=empleado,
             accion=f"❌ @{request.user.username} rechazó la solicitud de vacaciones de {empleado.nombre} {empleado.apellido} (del {solicitud.fecha_inicio} al {solicitud.fecha_fin})."
         )
 
         if empleado.usuario and empleado.usuario.email:
-            asunto = '❌ Solicitud de Vacaciones Rehazada'
+            asunto = '❌ Solicitud de Vacaciones Rechazada'
             mensaje = f'Hola {empleado.nombre},\n\nTu solicitud de vacaciones para las fechas {solicitud.fecha_inicio} al {solicitud.fecha_fin} ha sido rechazada.\n\nPor favor, comunícate con RRHH para más detalles.'
             enviar_notificacion_email(asunto, mensaje, [empleado.usuario.email])
 
     elif accion == 'aprobar':
-        superposicion_vac = SolicitudVacaciones.objects.filter(
-            empleado=empleado, estado='APROBADO', fecha_inicio__lte=solicitud.fecha_fin, fecha_fin__gte=solicitud.fecha_inicio
-        ).exclude(id=solicitud.id).exists()
-
-        superposicion_lic = Licencia.objects.filter(
-            empleado=empleado, estado='APROBADO', fecha_inicio__lte=solicitud.fecha_fin, fecha_fin__gte=solicitud.fecha_inicio
-        ).exists()
-
-        if superposicion_vac or superposicion_lic:
-            print(f"❌ ERROR: {empleado.apellido} ya tiene una ausencia aprobada en esas fechas.")
+        # 🔥 VALIDACIÓN CON FAT MODEL
+        if empleado.tiene_ausencia_aprobada(solicitud.fecha_inicio, solicitud.fecha_fin, excluir_vacacion_id=solicitud.id):
+            messages.error(request, f"⛔ ERROR: {empleado.apellido} ya tiene una ausencia aprobada en esas fechas.")
             return redirect('dashboard')
 
-        with transaction.atomic():
-            saldo_total = BolsaVacaciones.objects.filter(empleado=solicitud.empleado, dias_restantes__gt=0).aggregate(
-                total=Sum('dias_restantes'))['total'] or 0
+        # 🔥 EJECUCIÓN DEL DESCUENTO CON FAT MODEL
+        exito, mensaje_error = solicitud.ejecutar_aprobacion_y_descuento()
+        
+        if not exito:
+            messages.error(request, f"⛔ ERROR: {mensaje_error}")
+            return redirect('dashboard')
 
-            if saldo_total < solicitud.dias_totales:
-                solicitud.estado = 'RECHAZADO'
-                solicitud.save()
-                return redirect('dashboard')
+        # Si llegó acá, todo salió perfecto
+        AuditoriaSaldo.objects.create(
+            autor=request.user, empleado=empleado,
+            accion=f"✅ @{request.user.username} aprobó las vacaciones de {empleado.nombre} {empleado.apellido} por {solicitud.dias_totales} días (del {solicitud.fecha_inicio} al {solicitud.fecha_fin})."
+        )
 
-            dias_a_descontar = solicitud.dias_totales
-            bolsas = BolsaVacaciones.objects.filter(empleado=solicitud.empleado,
-                                                    dias_restantes__gt=0).select_for_update().order_by('anio')
-
-            for bolsa in bolsas:
-                if dias_a_descontar == 0: break
-                descuento = min(bolsa.dias_restantes, dias_a_descontar)
-                bolsa.dias_restantes -= descuento
-                bolsa.save()
-                ConsumoDetalle.objects.create(solicitud=solicitud, bolsa=bolsa, dias_descontados=descuento)
-                dias_a_descontar -= descuento
-
-            solicitud.estado = 'APROBADO'
-            solicitud.save()
-
-            # --- 🕵️‍♂️ AUDITORÍA ---
-            AuditoriaSaldo.objects.create(
-                autor=request.user, 
-                empleado=empleado,
-                accion=f"✅ @{request.user.username} aprobó las vacaciones de {empleado.nombre} {empleado.apellido} por {solicitud.dias_totales} días (del {solicitud.fecha_inicio} al {solicitud.fecha_fin})."
-            )
-
-            if empleado.usuario and empleado.usuario.email:
-                asunto = '✅ Vacaciones Aprobadas'
-                mensaje = f'¡Buenas noticias {empleado.nombre}!\n\nTus vacaciones han sido aprobadas.\nFechas: {solicitud.fecha_inicio} al {solicitud.fecha_fin}\n\n¡Que descanses!'
-                enviar_notificacion_email(asunto, mensaje, [empleado.usuario.email])
+        if empleado.usuario and empleado.usuario.email:
+            asunto = '✅ Vacaciones Aprobadas'
+            mensaje = f'¡Buenas noticias {empleado.nombre}!\n\nTus vacaciones han sido aprobadas.\nFechas: {solicitud.fecha_inicio} al {solicitud.fecha_fin}\n\n¡Que descanses!'
+            enviar_notificacion_email(asunto, mensaje, [empleado.usuario.email])
 
     return redirect('dashboard')
-
 
 @login_required
 def editar_empleado(request, empleado_id):
