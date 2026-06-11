@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     pkg-config \
     libcairo2-dev \
+    libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 # El rm -rf final es para borrar la caché de descargas de Linux y mantener el contenedor liviano
 
