@@ -92,6 +92,7 @@ rutas_sistema = [
     path('usuario/editar/<int:user_id>/', views.editar_usuario, name='editar_usuario'),
     path('usuarios/eliminar/<int:empleado_id>/', views.eliminar_usuario, name='eliminar_usuario'),
     path('usuario/eliminar-sistema/<int:user_id>/', views.eliminar_usuario_sistema, name='eliminar_usuario_sistema'),
+    path('central-operaciones/', views.central_operaciones, name='central_operaciones'),
 
     # Feriados
     path('feriados/crear/', views.crear_feriado, name='crear_feriado'),

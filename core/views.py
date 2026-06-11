@@ -36,7 +36,7 @@ from .models import (AuditoriaSaldo, BolsaVacaciones, ConsumoDetalle, Documento,
                      SolicitudVacaciones)
 # 2. FORMULARIOS
 from .forms import (BolsaManualForm, CrearUsuarioForm, DocumentoForm, EmpleadoEditarForm, EmpleadoForm, FeriadoForm,
-                    LicenciaForm, PermisoForm, SolicitudForm)
+                    LicenciaForm, PermisoForm, SolicitudForm, CentralSolicitudForm, CentralLicenciaForm, CentralPermisoForm)
 # 3. UTILS
 from .utils import enviar_notificacion_email
 
@@ -1385,3 +1385,94 @@ def historial_general(request):
         )
 
     return render(request, 'core/historial_general.html', {'logs': logs, 'busqueda_actual': busqueda or ''})
+
+# --- CENTRAL DE OPERACIONES RRHH ---
+@login_required
+def central_operaciones(request):
+    if not request.user.is_staff:
+        return redirect('dashboard')
+
+    # Instanciamos los tres formularios vacíos
+    form_vacacion = CentralSolicitudForm()
+    form_licencia = CentralLicenciaForm(usuario=request.user)
+    form_permiso = CentralPermisoForm()
+
+    if request.method == 'POST':
+        accion_central = request.POST.get('accion_central')
+
+        if accion_central == 'vacacion':
+            form_vacacion = CentralSolicitudForm(request.POST)
+            if form_vacacion.is_valid():
+                solicitud = form_vacacion.save(commit=False)
+                empleado = form_vacacion.cleaned_data['empleado']
+                solicitud.empleado = empleado
+                solicitud.estado = 'APROBADO'
+                
+                exito, msj = solicitud.ejecutar_aprobacion_y_descuento()
+                
+                if exito:
+                    AuditoriaSaldo.objects.create(
+                        autor=request.user, empleado=empleado,
+                        accion=f"⚡ CARGA CENTRAL: Aprobó vacaciones para {empleado.nombre} {empleado.apellido} por {solicitud.dias_totales} días."
+                    )
+                    messages.success(request, f"✅ Vacaciones de {empleado.apellido} cargadas al instante.")
+                    return redirect('central_operaciones')
+                else:
+                    messages.error(request, f"⛔ {msj}")
+            else:
+                # 👇 NUEVO: Atrapa el error de choque de fechas y lo muestra en pantalla
+                for error in form_vacacion.non_field_errors():
+                    messages.error(request, error)
+
+        elif accion_central == 'licencia':
+            form_licencia = CentralLicenciaForm(request.POST, usuario=request.user)
+            if form_licencia.is_valid():
+                licencia = form_licencia.save(commit=False)
+                empleado = form_licencia.cleaned_data['empleado']
+                licencia.empleado = empleado
+                licencia.estado = 'APROBADO'
+                
+                if empleado.tiene_ausencia_aprobada(licencia.fecha_inicio, licencia.fecha_fin):
+                    messages.error(request, f"⛔ ERROR: {empleado.apellido} ya tiene una ausencia en esas fechas.")
+                else:
+                    licencia.save()
+                    AuditoriaSaldo.objects.create(
+                        autor=request.user, empleado=empleado,
+                        accion=f"⚡ CARGA CENTRAL: Aprobó licencia ({licencia.get_tipo_display()}) para {empleado.nombre} {empleado.apellido}."
+                    )
+                    messages.success(request, f"✅ Licencia de {empleado.apellido} cargada correctamente.")
+                    return redirect('central_operaciones')
+            else:
+                # 👇 NUEVO
+                for error in form_licencia.non_field_errors():
+                    messages.error(request, error)
+
+        elif accion_central == 'permiso':
+            form_permiso = CentralPermisoForm(request.POST)
+            if form_permiso.is_valid():
+                permiso = form_permiso.save(commit=False)
+                empleado = form_permiso.cleaned_data['empleado']
+                permiso.empleado = empleado
+                permiso.estado = 'APROBADO'
+                
+                if empleado.tiene_ausencia_aprobada(permiso.fecha_inicio, permiso.fecha_fin):
+                    messages.error(request, f"⛔ ERROR: {empleado.apellido} ya tiene una ausencia en esas fechas.")
+                else:
+                    permiso.save()
+                    AuditoriaSaldo.objects.create(
+                        autor=request.user, empleado=empleado,
+                        accion=f"⚡ CARGA CENTRAL: Aprobó permiso ({permiso.get_tipo_display()}) para {empleado.nombre} {empleado.apellido}."
+                    )
+                    messages.success(request, f"✅ Permiso de {empleado.apellido} cargado correctamente.")
+                    return redirect('central_operaciones')
+            else:
+                # 👇 NUEVO
+                for error in form_permiso.non_field_errors():
+                    messages.error(request, error)
+
+    context = {
+        'form_vacacion': form_vacacion,
+        'form_licencia': form_licencia,
+        'form_permiso': form_permiso,
+    }
+    return render(request, 'core/central_operaciones.html', context)

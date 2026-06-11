@@ -291,32 +291,42 @@ class SolicitudVacaciones(models.Model):
     def ejecutar_aprobacion_y_descuento(self):
         """
         Encapsula toda la lógica transaccional de aprobar una vacación y descontar el saldo.
-        Retorna (True, "") si fue exitoso, o (False, "mensaje de error") si falló.
         """
+        # 👇 FIX 1: Forzamos el cálculo de días si la solicitud viene fresca (commit=False)
+        if not self.dias_totales:
+            self.dias_totales = self.calcular_dias_reales()
+
         with transaction.atomic():
             saldo_total = self.empleado.bolsas.filter(dias_restantes__gt=0).aggregate(
                 total=models.Sum('dias_restantes'))['total'] or 0
 
+            # Ahora sí podemos comparar números con números sin que explote
             if saldo_total < self.dias_totales:
                 self.estado = 'RECHAZADO'
-                self.save(update_fields=['estado'])
+                if self.pk:
+                    super(SolicitudVacaciones, self).save(update_fields=['estado'])
                 return False, f"Saldo insuficiente. Tiene {saldo_total} días, pero requiere {self.dias_totales}."
+
+            self.estado = 'APROBADO'
+            
+            # 👇 FIX 2: Usamos super().save() para guardar en BD y generar el ID que necesita
+            # el ConsumoDetalle, pero saltándonos el save() viejo para NO descontar días por duplicado.
+            super(SolicitudVacaciones, self).save()
 
             dias_a_descontar = self.dias_totales
             bolsas = self.empleado.bolsas.filter(dias_restantes__gt=0).select_for_update().order_by('anio')
 
             for bolsa in bolsas:
-                if dias_a_descontar == 0: 
+                if dias_a_descontar <= 0: 
                     break
                 descuento = min(bolsa.dias_restantes, dias_a_descontar)
                 bolsa.dias_restantes -= descuento
                 bolsa.save(update_fields=['dias_restantes'])
                 
+                # Como ya guardamos la solicitud arriba, esto ahora funciona perfecto
                 ConsumoDetalle.objects.create(solicitud=self, bolsa=bolsa, dias_descontados=descuento)
                 dias_a_descontar -= descuento
 
-            self.estado = 'APROBADO'
-            self.save(update_fields=['estado'])
             return True, "Aprobación exitosa."
 
 

@@ -51,6 +51,8 @@
             {% if user.is_staff %}
                 <li class="nav-item"><a class="nav-link" href="{% url 'dashboard' %}">Panel</a></li>
                 <li class="nav-item"><a class="nav-link" href="{% url 'lista_empleados' %}">Empleados</a></li>
+                <li class="nav-item"><a class="nav-link text-warning fw-bold" href="{% url 'central_operaciones' %}"><i class="bi bi-lightning-charge-fill me-1"></i>Carga Rápida</a>
+                </li>
                 <li class="nav-item"><a class="nav-link text-secondary fw-bold" href="{% url 'configuracion' %}" title="Configuración">Configuración</a></li>
                 <li class="d-none d-lg-block border-start border-secondary mx-2" style="height: 24px;"></li>
             {% endif %}

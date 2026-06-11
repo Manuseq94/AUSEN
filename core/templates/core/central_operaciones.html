@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Central de Cargas - AUSEN{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 mt-4">
+    <div>
+        <h2 class="fw-bold mb-1">⚡ Central de Cargas Rápidas</h2>
+        <p class="text-muted mb-0">Asigna ausencias directamente sin pasar por los legajos</p>
+    </div>
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+            <span class="fw-bold">{{ message }}</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    {% endfor %}
+{% endif %}
+
+<div class="card border-0 shadow-sm mb-5 bg-body">
+    <div class="card-header bg-transparent border-bottom-0 pt-4 px-4">
+        <ul class="nav nav-tabs card-header-tabs" id="centralTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active fw-bold text-primary" data-bs-toggle="tab" data-bs-target="#tab-vacaciones" type="button"><i class="bi bi-suitcase-lg me-2"></i>Vacaciones</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-danger" data-bs-toggle="tab" data-bs-target="#tab-licencias" type="button"><i class="bi bi-bandaid me-2"></i>Licencias</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link fw-bold text-info" data-bs-toggle="tab" data-bs-target="#tab-permisos" type="button"><i class="bi bi-house-door me-2"></i>Permisos</button>
+            </li>
+        </ul>
+    </div>
+
+    <div class="card-body p-4">
+        <div class="tab-content">
+            
+            <div class="tab-pane fade show active" id="tab-vacaciones">
+                <form method="post" class="row g-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion_central" value="vacacion">
+                    
+                    {% for field in form_vacacion %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                        {{ field }}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn btn-primary fw-bold px-5">Asignar Vacaciones</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="tab-pane fade" id="tab-licencias">
+                <form method="post" class="row g-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion_central" value="licencia">
+                    
+                    {% for field in form_licencia %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                        {{ field }}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn btn-danger fw-bold px-5">Asignar Licencia</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="tab-pane fade" id="tab-permisos">
+                <form method="post" class="row g-3">
+                    {% csrf_token %}
+                    <input type="hidden" name="accion_central" value="permiso">
+                    
+                    {% for field in form_permiso %}
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                        {{ field }}
+                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                    </div>
+                    {% endfor %}
+                    
+                    <div class="col-12 text-end mt-4">
+                        <button type="submit" class="btn btn-info text-dark fw-bold px-5">Asignar Permiso</button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

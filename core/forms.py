@@ -427,3 +427,54 @@ class DocumentoForm(forms.ModelForm):
             'titulo': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Ej: Recibo Sueldo Enero'}),
             'archivo': forms.FileInput(attrs={'class': 'form-control'}),
         }
+        
+# ==========================================
+# FORMULARIOS PARA LA CENTRAL DE OPERACIONES
+# ==========================================
+
+class CentralSolicitudForm(SolicitudForm):
+    empleado = forms.ModelChoiceField(
+        queryset=Empleado.objects.filter(activo=True).order_by('apellido', 'nombre'),
+        label="Seleccionar Empleado",
+        widget=forms.Select(attrs={'class': 'form-select fw-bold border-primary'})
+    )
+    
+    class Meta(SolicitudForm.Meta):
+        # Ponemos al empleado como primer campo
+        fields = ['empleado'] + SolicitudForm.Meta.fields
+
+    def clean(self):
+        # 🧠 Truco DRY: Inyectamos el empleado en "self" antes de llamar a la validación 
+        # del padre, así SolicitudForm cree que estamos dentro de un legajo individual.
+        self.empleado = self.cleaned_data.get('empleado')
+        return super().clean()
+
+
+class CentralLicenciaForm(LicenciaForm):
+    empleado = forms.ModelChoiceField(
+        queryset=Empleado.objects.filter(activo=True).order_by('apellido', 'nombre'),
+        label="Seleccionar Empleado",
+        widget=forms.Select(attrs={'class': 'form-select fw-bold border-danger'})
+    )
+    
+    class Meta(LicenciaForm.Meta):
+        fields = ['empleado'] + LicenciaForm.Meta.fields
+
+    def clean(self):
+        self.empleado = self.cleaned_data.get('empleado')
+        return super().clean()
+
+
+class CentralPermisoForm(PermisoForm):
+    empleado = forms.ModelChoiceField(
+        queryset=Empleado.objects.filter(activo=True).order_by('apellido', 'nombre'),
+        label="Seleccionar Empleado",
+        widget=forms.Select(attrs={'class': 'form-select fw-bold border-info'})
+    )
+    
+    class Meta(PermisoForm.Meta):
+        fields = ['empleado'] + PermisoForm.Meta.fields
+
+    def clean(self):
+        self.empleado = self.cleaned_data.get('empleado')
+        return super().clean()
