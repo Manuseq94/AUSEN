@@ -1,28 +1,5 @@
-/* ==========================================
-   FIX: FONDOS INTERNOS REBELDES Y LISTAS
-   ========================================== */
-/* Forzamos a que el cuerpo, encabezado y listas sean transparentes 
-   para que dejen ver el azul noche de la tarjeta padre */
-[data-bs-theme="dark"] .card-body,
-[data-bs-theme="dark"] .card-header,
-[data-bs-theme="dark"] .card-footer,
-[data-bs-theme="dark"] .list-group {
-    background-color: transparent !important;
-}
-
-/* Le sacamos el borde redondeado propio a los items de la lista 
-   para que no compitan con el borde redondeado de la tarjeta maestra */
-[data-bs-theme="dark"] .list-group-item {
-    border-radius: 0 !important;
-}
-
-/* Si usaste un "bg-white" directamente en el div que envuelve al calendario, lo matamos acá: */
-[data-bs-theme="dark"] .bg-white {
-    background-color: transparent !important;
-}
-
 /* =========================================================
-   OVERRIDE ESTILO TAILWIND 2026 (Minimalismo & Flat Design)
+   1. VARIABLES GLOBALES Y BASE (Minimalismo & Flat Design)
    ========================================================= */
 :root {
     --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
@@ -53,7 +30,10 @@ body {
 .navbar-brand, .nav-link { color: #0f172a !important; font-weight: 500; }
 .nav-link:hover { color: #3b82f6 !important; }
 
-/* Tarjetas estilo Tailwind (shadow-sm a shadow-md) */
+/* =========================================================
+   2. COMPONENTES GLOBALES
+   ========================================================= */
+/* Tarjetas estilo Tailwind */
 .card {
     border: 1px solid var(--bs-border-color) !important;
     border-radius: 1rem !important;
@@ -65,6 +45,15 @@ body {
     background-color: transparent !important;
     border-bottom: 1px solid var(--bs-border-color);
     padding: 1.25rem 1.5rem;
+}
+
+/* Efectos Hover en Tarjetas */
+.card-hover { 
+    transition: transform 0.2s ease, box-shadow 0.2s ease; 
+}
+.card-hover:hover { 
+    transform: translateY(-5px); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; 
 }
 
 /* Botones Planos */
@@ -94,134 +83,53 @@ body {
     box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-/* Tablas airy (espaciosas) */
+/* Tablas espaciosas */
 .table { margin-bottom: 0; }
 .table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding-top: 1rem; padding-bottom: 1rem; }
 .table td { padding: 1rem 0.5rem; color: #334155; vertical-align: middle; }
 
-/* Ajustes Modo Oscuro Minimalista */
-[data-bs-theme="dark"] body { background-color: #0f172a; color: #f8fafc; }
-[data-bs-theme="dark"] .navbar { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #1e293b !important; }
-[data-bs-theme="dark"] .navbar-brand, [data-bs-theme="dark"] .nav-link { color: #f8fafc !important; }
-
-/* Forzamos el fondo de las tarjetas y anulamos los blancos de Bootstrap */
-[data-bs-theme="dark"] .card, [data-bs-theme="dark"] .bg-body, [data-bs-theme="dark"] .bg-light, [data-bs-theme="dark"] .bg-white { 
-    background-color: #1e293b !important; 
-    border-color: #334155 !important; 
+/* Avatares */
+.avatar-circle { 
+    width: 40px; height: 40px; 
+    background-color: #e2e8f0; color: #475569; 
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+    font-size: 0.9rem; font-weight: 600; 
 }
-[data-bs-theme="dark"] .bg-body-tertiary { background-color: #0f172a !important; }
-
-/* Inputs oscuros y prolijos */
-[data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select { background-color: #0f172a; border-color: #334155; color: white; }
-
-/* FIX: TABLAS INTEGRADAS AL MODO OSCURO */
-[data-bs-theme="dark"] .table {
-    --bs-table-bg: transparent;
-    --bs-table-color: #f8fafc;
-    --bs-table-border-color: #334155;
-    --bs-table-hover-bg: rgba(248, 250, 252, 0.05);
-    --bs-table-hover-color: #f8fafc;
+.avatar-sm {
+    width: 38px; height: 38px;
+    background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: bold; font-size: 0.85rem; flex-shrink: 0;
 }
-[data-bs-theme="dark"] .table-light th, [data-bs-theme="dark"] .table th { 
-    background-color: #0f172a !important;
-    color: #94a3b8 !important; 
-    border-bottom: 1px solid #334155 !important; 
-}
-[data-bs-theme="dark"] .table td { 
-    background-color: transparent !important; 
-    border-bottom-color: #334155; 
+.avatar-xl {
+    width: 80px !important; height: 80px !important; font-size: 2rem !important;
+    display: flex; align-items: center; justify-content: center;
 }
 
-/* Avatars */
-.avatar-circle { width: 40px; height: 40px; background-color: #e2e8f0; color: #475569; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600; }
+/* =========================================================
+   3. VISTAS ESPECÍFICAS
+   ========================================================= */
+/* Pantallas de Autenticación y Recuperación */
+.auth-wrapper {
+    background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), url('https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1948&auto=format&fit=crop');
+    background-size: cover; background-position: center; background-repeat: no-repeat; background-attachment: fixed;
+    min-height: 100vh; margin: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.auth-card {
+    width: 100%; max-width: 400px;
+    border: none; border-radius: 1rem;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+    background-color: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    margin: 20px;
+}
+.brand-logo-auth { font-size: 3rem; margin-bottom: 0.5rem; display: block; text-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.brand-name-auth { font-family: 'Segoe UI', sans-serif; letter-spacing: 4px; font-weight: 300; font-size: 1.8rem; margin-bottom: 0.2rem; display: block; text-transform: uppercase; }
+.brand-slogan-auth { font-size: 0.7rem; letter-spacing: 1.5px; font-weight: 600; text-transform: uppercase; margin-bottom: 2rem; display: block; }
 
-/* FIX: LISTAS (LIST-GROUP) EN MODO OSCURO */
-[data-bs-theme="dark"] .list-group-item {
-    background-color: transparent !important;
-    border-color: #334155 !important;
-    color: #f8fafc !important;
-}
-[data-bs-theme="dark"] .list-group-item:hover {
-    background-color: rgba(248, 250, 252, 0.05) !important;
-}
-[data-bs-theme="dark"] .list-group-item .empleado-link { color: #f8fafc !important; }
-[data-bs-theme="dark"] .list-group-item .empleado-link:hover { color: #93c5fd !important; }
-[data-bs-theme="dark"] .text-muted { color: #94a3b8 !important; }
-
-/* FIX DEFINITIVO: CALENDARIO MODO OSCURO */
-[data-bs-theme="dark"] .fc {
-    --fc-page-bg-color: transparent;
-    --fc-neutral-bg-color: #1e293b;
-    --fc-neutral-text-color: #94a3b8;
-    --fc-border-color: #334155;
-    --fc-today-bg-color: rgba(59, 130, 246, 0.15);
-    color: #f8fafc;
-}
-[data-bs-theme="dark"] .fc-theme-standard th,
-[data-bs-theme="dark"] .fc-theme-standard td,
-[data-bs-theme="dark"] .fc-view-harness,
-[data-bs-theme="dark"] .fc-scrollgrid {
-    background-color: #1e293b !important;
-    border-color: #334155 !important;
-}
-[data-bs-theme="dark"] .fc-day-today { background-color: var(--fc-today-bg-color) !important; }
-[data-bs-theme="dark"] .fc-col-header-cell-cushion,
-[data-bs-theme="dark"] .fc-daygrid-day-number {
-    color: #f8fafc !important; 
-    text-decoration: none;
-}
-[data-bs-theme="dark"] .fc .fc-button-primary {
-    background-color: #0f172a !important;
-    border-color: #334155 !important;
-    color: #94a3b8 !important;
-    box-shadow: none !important;
-    text-transform: capitalize;
-}
-[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):hover,
-[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):active,
-[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active {
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-}
-
-/* FIX: ENCABEZADOS DE FORMULARIOS (LABELS) */
-[data-bs-theme="dark"] .form-label,
-[data-bs-theme="dark"] .text-secondary {
-    color: #94a3b8 !important;
-}
-
-/* FIX: MARCO EXTERIOR DEL CALENDARIO */
-[data-bs-theme="dark"] .fc table,
-[data-bs-theme="dark"] table.fc-scrollgrid {
-    border-color: #334155 !important;
-    border-collapse: collapse !important;
-}
-
-/* ==========================================
-   FIX: CHECKBOXES, RADIOS Y TEXTOS REBELDES
-   ========================================== */
-[data-bs-theme="dark"] .form-check-label,
-[data-bs-theme="dark"] .text-dark {
-    color: #f8fafc !important; /* Fuerza el texto a blanco humo */
-}
-
-/* Oscurecemos el cuadradito del checkbox cuando no está tildado */
-[data-bs-theme="dark"] .form-check-input {
-    background-color: #0f172a;
-    border-color: #475569;
-}
-
-/* Color azul Tailwind cuando el checkbox ESTÁ tildado */
-[data-bs-theme="dark"] .form-check-input:checked {
-    background-color: #3b82f6 !important;
-    border-color: #3b82f6 !important;
-}
-
-/* ==========================================
-   ESTILOS EXCLUSIVOS DEL DASHBOARD
-   ========================================== */
-/* Tarjetas Contadores */
+/* Dashboard - Tarjetas Contadores */
+/* Dashboard - Tarjetas Contadores */
 .card-counter { 
     border: none !important; 
     box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
@@ -229,27 +137,167 @@ body {
     transition: transform 0.2s; 
 }
 .card-counter:hover { transform: translateY(-5px); }
-.bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-.bg-gradient-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-.bg-gradient-warning { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
 
-/* Listas y Enlaces (Dashboard) */
+/* --- NUEVOS COLORES SEMÁNTICOS DESATURADOS --- */
+/* Azul Acero suave para "Total" */
+.bg-gradient-primary { background: linear-gradient(135deg, #7c98b3 0%, #5b7999 100%); } 
+/* Verde Salvia para "Presentes" */
+.bg-gradient-success { background: linear-gradient(135deg, #8cb39d 0%, #68947b 100%); } 
+/* Terracota / Naranja Mate para "Ausentes" */
+.bg-gradient-warning { background: linear-gradient(135deg, #d99c85 0%, #bd7b61 100%); }
+/* Dashboard - Enlaces */
 .empleado-link { color: var(--bs-body-color); font-weight: bold; text-decoration: none; transition: color 0.2s; }
 .empleado-link:hover { color: #3b82f6; text-decoration: underline; }
 
-/* Calendario Adaptativo Container */
+/* Dashboard - Calendario Base */
 #calendar-container {
-    background: #ffffff;
-    padding: 25px;
-    border-radius: 1rem;
+    background: #ffffff; padding: 25px; border-radius: 1rem;
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
-    margin-top: 30px;
-    transition: background-color 0.3s;
+    margin-top: 30px; transition: background-color 0.3s;
 }
 #calendar { max-width: 100%; min-height: 650px; font-size: 0.9rem; }
 
-/* Contenedor del calendario en modo oscuro */
-[data-bs-theme="dark"] #calendar-container { 
-    background: #1e293b; 
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+/* =========================================================
+   4. UTILIDADES (Helpers)
+   ========================================================= */
+.table-container-500 { max-height: 500px; overflow-y: auto; }
+.audit-table-container { max-height: 300px; overflow-y: auto; }
+.chart-container { height: 300px; }
+.input-month-custom { width: auto; cursor: pointer; }
+
+/* =========================================================
+   5. MODO OSCURO (Overrides Centralizados)
+   ========================================================= */
+/* Estructura Base y Navbar */
+[data-bs-theme="dark"] body { background-color: #0f172a; color: #f8fafc; }
+[data-bs-theme="dark"] .navbar { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #1e293b !important; }
+[data-bs-theme="dark"] .navbar-brand, [data-bs-theme="dark"] .nav-link { color: #f8fafc !important; }
+
+/* Tarjetas y Fondos */
+[data-bs-theme="dark"] .card, 
+[data-bs-theme="dark"] .bg-body, 
+[data-bs-theme="dark"] .bg-light, 
+[data-bs-theme="dark"] .bg-white,
+[data-bs-theme="dark"] .bg-white.rounded-4,
+[data-bs-theme="dark"] .bg-light.rounded-3 { 
+    background-color: #1e293b !important; 
+    border-color: #334155 !important; 
+}
+[data-bs-theme="dark"] .bg-body-tertiary { background-color: #0f172a !important; }
+[data-bs-theme="dark"] .border { border-color: #334155 !important; }
+[data-bs-theme="dark"] .card-hover:hover { box-shadow: 0 10px 20px rgba(0,0,0,0.4) !important; }
+
+/* Elementos transparentes para no solapar contenedores padres */
+[data-bs-theme="dark"] .card-body,
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .list-group {
+    background-color: transparent !important;
+}
+
+/* Tipografía */
+[data-bs-theme="dark"] .text-dark, 
+[data-bs-theme="dark"] .form-check-label { color: #f8fafc !important; }
+[data-bs-theme="dark"] .text-muted, 
+[data-bs-theme="dark"] .text-secondary,
+[data-bs-theme="dark"] .form-label { color: #94a3b8 !important; }
+
+/* Formularios e Inputs */
+[data-bs-theme="dark"] .form-control, 
+[data-bs-theme="dark"] .form-select { background-color: #0f172a; border-color: #334155; color: white; }
+[data-bs-theme="dark"] .form-check-input { background-color: #0f172a; border-color: #475569; }
+[data-bs-theme="dark"] .form-check-input:checked { background-color: #3b82f6 !important; border-color: #3b82f6 !important; }
+
+/* Tablas */
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f8fafc;
+    --bs-table-border-color: #334155;
+}
+[data-bs-theme="dark"] .table-light th, 
+[data-bs-theme="dark"] .table th { 
+    background-color: #1e293b !important;
+    color: #f8fafc !important; 
+    border-color: #334155 !important; 
+    border-bottom: 1px solid #334155 !important; 
+}
+[data-bs-theme="dark"] .table td { background-color: transparent !important; border-bottom-color: #334155; }
+[data-bs-theme="dark"] .table-hover tbody tr:hover { background-color: rgba(248, 250, 252, 0.05) !important; }
+
+/* Listas (List-group) */
+[data-bs-theme="dark"] .list-group-item { background-color: transparent !important; border-color: #334155 !important; color: #f8fafc !important; border-radius: 0 !important; }
+[data-bs-theme="dark"] .list-group-item:hover { background-color: rgba(248, 250, 252, 0.05) !important; }
+[data-bs-theme="dark"] .list-group-item .empleado-link { color: #f8fafc !important; }
+[data-bs-theme="dark"] .list-group-item .empleado-link:hover { color: #93c5fd !important; }
+
+/* Pestañas (Nav Pills) */
+[data-bs-theme="dark"] .nav-pills .nav-link:not(.active) { color: #94a3b8; }
+[data-bs-theme="dark"] .nav-pills .nav-link:not(.active):hover { color: #f8fafc; background-color: rgba(248, 250, 252, 0.05); }
+
+/* Menú Desplegable (Dropdown) */
+[data-bs-theme="dark"] .dropdown-menu { background-color: #1e293b !important; border-color: #334155 !important; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3) !important; }
+[data-bs-theme="dark"] .dropdown-header { color: #94a3b8 !important; }
+[data-bs-theme="dark"] .dropdown-item { color: #f8fafc !important; }
+[data-bs-theme="dark"] .dropdown-item:hover { background-color: rgba(248, 250, 252, 0.05) !important; color: #3b82f6 !important; }
+[data-bs-theme="dark"] .dropdown-divider { border-top-color: #334155 !important; }
+[data-bs-theme="dark"] .dropdown-item.text-danger { color: #ef4444 !important; }
+[data-bs-theme="dark"] .dropdown-item.text-danger:hover { color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.1) !important; }
+
+/* FullCalendar */
+[data-bs-theme="dark"] #calendar-container { background: #1e293b; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+[data-bs-theme="dark"] .fc {
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #1e293b;
+    --fc-neutral-text-color: #94a3b8;
+    --fc-border-color: #334155;
+    --fc-today-bg-color: rgba(59, 130, 246, 0.15);
+    color: #f8fafc !important;
+}
+[data-bs-theme="dark"] .fc-theme-standard th,
+[data-bs-theme="dark"] .fc-theme-standard td,
+[data-bs-theme="dark"] .fc-view-harness,
+[data-bs-theme="dark"] .fc-scrollgrid { background-color: #1e293b !important; border-color: #334155 !important; }
+[data-bs-theme="dark"] .fc-day-today { background-color: var(--fc-today-bg-color) !important; }
+[data-bs-theme="dark"] .fc-col-header-cell-cushion,
+[data-bs-theme="dark"] .fc-daygrid-day-number { color: #f8fafc !important; text-decoration: none; }
+[data-bs-theme="dark"] .fc .fc-button-primary { background-color: #0f172a !important; border-color: #334155 !important; color: #94a3b8 !important; box-shadow: none !important; text-transform: capitalize; }
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):hover,
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):active,
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active { background-color: #3b82f6 !important; border-color: #3b82f6 !important; color: #ffffff !important; }
+[data-bs-theme="dark"] .fc table,
+[data-bs-theme="dark"] table.fc-scrollgrid { border-color: #334155 !important; border-collapse: collapse !important; }
+/* ==========================================
+   FIX: PESTAÑAS (NAV-TABS) CENTRAL DE CARGAS
+   ========================================== */
+[data-bs-theme="dark"] .nav-tabs {
+    border-bottom-color: #334155 !important;
+}
+[data-bs-theme="dark"] .nav-tabs .nav-link {
+    color: #94a3b8 !important; /* Gris apagado para pestañas inactivas */
+}
+[data-bs-theme="dark"] .nav-tabs .nav-link:hover {
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+/* Pestaña Activa: Fondo igual a la tarjeta y borde inferior oculto */
+[data-bs-theme="dark"] .nav-tabs .nav-item.show .nav-link, 
+[data-bs-theme="dark"] .nav-tabs .nav-link.active {
+    color: #f8fafc !important;
+    background-color: #1e293b !important; 
+    border-color: #334155 #334155 #1e293b !important; 
+}
+
+/* ==========================================
+   FIX: TEXTOS ILEGIBLES EN TABLAS (EMPLEADOS)
+   ========================================== */
+/* Fuerza a que los nombres y textos principales sean blanco humo */
+[data-bs-theme="dark"] .table td,
+[data-bs-theme="dark"] .table td div {
+    color: #f8fafc !important; 
+}
+/* Un gris mucho más luminoso (slate-300) para subtítulos, cargos y legajos */
+[data-bs-theme="dark"] .table td .text-muted,
+[data-bs-theme="dark"] .table td .text-secondary,
+[data-bs-theme="dark"] td.text-secondary {
+    color: #cbd5e1 !important; 
 }

@@ -2,32 +2,6 @@
 
 {% block title %}Usuarios y Accesos - AUSEN{% endblock %}
 
-{% block extra_css %}
-    <style>
-        /* Estilos específicos para esta página */
-
-        /* Avatar pequeño para la tabla */
-        .avatar-sm {
-            width: 38px; height: 38px;
-            background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color);
-            border-radius: 50%; display: flex;
-            align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-
-        /* Ajuste Dark Mode Tabla */
-        .table-hover tbody tr:hover { background-color: var(--bs-tertiary-bg); }
-
-        /* FIX: ENCABEZADOS DE TABLA OSCUROS EN MODO NOCHE */
-        [data-bs-theme="dark"] .table-light th {
-            background-color: #212529; /* Gris oscuro */
-            color: #e9ecef;            /* Texto claro */
-            border-color: #373b3e;     /* Borde sutil */
-        }
-    </style>
-{% endblock %}
-
 {% block content %}
 
     <div class="row g-4">
@@ -68,10 +42,10 @@
 
                         <div class="mb-4 form-check bg-body-tertiary p-3 rounded border">
                             {{ form.es_admin }}
-                            <label class="form-check-label fw-bold ms-2">
+                            <label class="form-check-label fw-bold ms-2 text-body">
                                 ¿Es Administrador (RRHH)?
                             </label>
-                            <div class="form-text small mt-1">Podrá aprobar vacaciones y ver todo.</div>
+                            <div class="form-text small mt-1 text-body-secondary">Podrá aprobar vacaciones y ver todo.</div>
                         </div>
 
                         <div class="d-grid">
@@ -191,7 +165,7 @@
                         </table>
                     </div>
                 </div>
-                <div class="card-footer bg-body text-muted small text-center">
+                <div class="card-footer bg-body text-muted small text-center border-top-0">
                     Mostrando {{ usuarios.count }} usuarios con acceso.
                 </div>
             </div>

@@ -2,30 +2,6 @@
 
 {% block title %}Nómina de Personal - AUSEN{% endblock %}
 
-{% block extra_css %}
-    <style>
-        /* Avatar Circular Pequeño para la tabla */
-        .avatar-sm {
-            width: 38px; height: 38px;
-            background-color: var(--bs-secondary-bg); color: var(--bs-secondary-color);
-            border-radius: 50%; display: flex;
-            align-items: center; justify-content: center;
-            font-weight: bold; font-size: 0.85rem;
-            flex-shrink: 0;
-        }
-
-        /* Ajustes Dark Mode Tabla */
-        .table-hover tbody tr:hover { background-color: var(--bs-tertiary-bg); }
-
-        /* FIX: ENCABEZADOS DE TABLA OSCUROS EN MODO NOCHE */
-        [data-bs-theme="dark"] .table-light th {
-            background-color: #212529; /* Gris oscuro */
-            color: #e9ecef;            /* Texto claro */
-            border-color: #373b3e;     /* Borde sutil */
-        }
-    </style>
-{% endblock %}
-
 {% block content %}
 
     <div class="d-flex justify-content-between align-items-center mb-4">
