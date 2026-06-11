@@ -23,7 +23,7 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.core.management import call_command
 from django.db import transaction
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Q, Sum, Exists, OuterRef, Prefetch
 from django.db.models.functions import ExtractMonth
 from django.http import HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
@@ -94,153 +94,106 @@ def dashboard(request):
     hoy = timezone.now().date()
 
     # --- A. ALERTAS DE PENDIENTES (Solo activos) ---
-    pendientes = SolicitudVacaciones.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related(
-        'empleado').order_by('fecha_inicio')
-    licencias_pendientes = Licencia.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related(
-        'empleado').order_by('fecha_inicio')
-    permisos_pendientes = Permiso.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related(
-        'empleado').order_by('fecha_inicio')
+    pendientes = SolicitudVacaciones.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related('empleado').order_by('fecha_inicio')
+    licencias_pendientes = Licencia.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related('empleado').order_by('fecha_inicio')
+    permisos_pendientes = Permiso.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related('empleado').order_by('fecha_inicio')
 
-    # --- B. LISTA UNIFICADA: AUSENTES HOY ---
+    # --- B. OPTIMIZACIÓN EXTREMA: AUSENTES HOY ---
+    # Delegamos a Postgres la tarea de buscar quién está ausente hoy sin traer registros basura
+    q_vacaciones_hoy = SolicitudVacaciones.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
+    q_licencias_hoy = Licencia.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
+
+    empleados_ausentes = Empleado.objects.filter(activo=True).annotate(
+        de_vacaciones=Exists(q_vacaciones_hoy),
+        de_licencia=Exists(q_licencias_hoy)
+    ).filter(
+        Q(de_vacaciones=True) | Q(de_licencia=True)
+    ).prefetch_related(
+        Prefetch('solicitudes', queryset=SolicitudVacaciones.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='vacacion_actual'),
+        Prefetch('licencias', queryset=Licencia.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='licencia_actual')
+    )
+
     lista_ausentes = []
-    procesados_ausentes = set()
+    solo_vacaciones = 0
+    total_ausentes_real = 0
 
-    # 1. Primero buscamos LICENCIAS
-    lics_ausentes = Licencia.objects.filter(
-        fecha_inicio__lte=hoy, fecha_fin__gte=hoy, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
-
-    for l in lics_ausentes:
-        if l.empleado.id not in procesados_ausentes:
+    for emp in empleados_ausentes:
+        total_ausentes_real += 1
+        # Si tiene licencia, pisa a las vacaciones en prioridad de visualización
+        if emp.de_licencia and emp.licencia_actual:
+            lic = emp.licencia_actual[0]
             lista_ausentes.append({
-                'empleado': l.empleado,
-                'hasta': l.fecha_fin,
-                'motivo': l.get_tipo_display(),
-                'es_licencia': True,
-                'empleado_id': l.empleado.id
+                'empleado': emp, 'hasta': lic.fecha_fin, 'motivo': lic.get_tipo_display(), 'es_licencia': True, 'empleado_id': emp.id
             })
-            procesados_ausentes.add(l.empleado.id)
-
-    # 2. Luego buscamos VACACIONES
-    vacs_ausentes = SolicitudVacaciones.objects.filter(
-        fecha_inicio__lte=hoy, fecha_fin__gte=hoy, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
-
-    for v in vacs_ausentes:
-        if v.empleado.id not in procesados_ausentes:
+        elif emp.de_vacaciones and emp.vacacion_actual:
+            vac = emp.vacacion_actual[0]
             lista_ausentes.append({
-                'empleado': v.empleado,
-                'hasta': v.fecha_fin,
-                'motivo': 'Vacaciones',
-                'es_licencia': False,
-                'empleado_id': v.empleado.id
+                'empleado': emp, 'hasta': vac.fecha_fin, 'motivo': 'Vacaciones', 'es_licencia': False, 'empleado_id': emp.id
             })
-            procesados_ausentes.add(v.empleado.id)
+            solo_vacaciones += 1
 
-    # --- C. LISTA UNIFICADA: VUELVEN PRONTO ---
+    lista_ausentes.sort(key=lambda x: x['hasta'])
+
+    # --- C. OPTIMIZACIÓN EXTREMA: VUELVEN PRONTO (Próximos 5 días) ---
     limite_retorno = hoy + timedelta(days=5)
+    
+    q_regreso_vacs = SolicitudVacaciones.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno)
+    q_regreso_lics = Licencia.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno)
+
+    empleados_regresan = Empleado.objects.filter(activo=True).annotate(
+        regresa_vacs=Exists(q_regreso_vacs),
+        regresa_lics=Exists(q_regreso_lics)
+    ).filter(
+        Q(regresa_vacs=True) | Q(regresa_lics=True)
+    ).prefetch_related(
+        Prefetch('solicitudes', queryset=SolicitudVacaciones.objects.filter(estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno), to_attr='vacacion_retorno'),
+        Prefetch('licencias', queryset=Licencia.objects.filter(estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno), to_attr='licencia_retorno')
+    )
+
     lista_regresos = []
-    procesados_regresos = set()
-
-    # 1. Licencias que terminan pronto
-    lics_ret = Licencia.objects.filter(
-        fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
-
-    for l in lics_ret:
-        if l.empleado.id not in procesados_regresos:
-            fecha_ret = l.fecha_fin + timedelta(days=1)
-            lista_regresos.append({
-                'empleado': l.empleado,
-                'fecha_retorno': fecha_ret,
-                'dias_faltantes': (fecha_ret - hoy).days,
-                'motivo': l.get_tipo_display(),
-                'es_licencia': True
-            })
-            procesados_regresos.add(l.empleado.id)
-
-    # 2. Vacaciones que terminan pronto
-    vacs_ret = SolicitudVacaciones.objects.filter(
-        fecha_fin__gte=hoy, fecha_fin__lte=limite_retorno, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
-
-    for v in vacs_ret:
-        if v.empleado.id not in procesados_regresos:
-            fecha_ret = v.fecha_fin + timedelta(days=1)
-            lista_regresos.append({
-                'empleado': v.empleado,
-                'fecha_retorno': fecha_ret,
-                'dias_faltantes': (fecha_ret - hoy).days,
-                'motivo': 'Vacaciones',
-                'es_licencia': False
-            })
-            procesados_regresos.add(v.empleado.id)
+    for emp in empleados_regresan:
+        if emp.regresa_lics and emp.licencia_retorno:
+            lic = emp.licencia_retorno[0]
+            fecha_ret = lic.fecha_fin + timedelta(days=1)
+            lista_regresos.append({'empleado': emp, 'fecha_retorno': fecha_ret, 'dias_faltantes': (fecha_ret - hoy).days, 'motivo': lic.get_tipo_display(), 'es_licencia': True})
+        elif emp.regresa_vacs and emp.vacacion_retorno:
+            vac = emp.vacacion_retorno[0]
+            fecha_ret = vac.fecha_fin + timedelta(days=1)
+            lista_regresos.append({'empleado': emp, 'fecha_retorno': fecha_ret, 'dias_faltantes': (fecha_ret - hoy).days, 'motivo': 'Vacaciones', 'es_licencia': False})
 
     lista_regresos.sort(key=lambda x: x['fecha_retorno'])
 
-    # --- D. LISTA UNIFICADA: SE VAN PRONTO ---
+    # --- D. SE VAN PRONTO (Próximos 7 días) ---
+    # Acá usamos list comprehensions sencillas porque las salidas futuras suelen ser pocas y ya usamos select_related
     limite_salida = hoy + timedelta(days=7)
     lista_salidas = []
 
-    # 1. Vacaciones futuras
-    vacs_sal = SolicitudVacaciones.objects.filter(
-        fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
+    vacs_sal = SolicitudVacaciones.objects.filter(fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida, estado='APROBADO', empleado__activo=True).select_related('empleado')
+    lics_sal = Licencia.objects.filter(fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida, estado='APROBADO', empleado__activo=True).select_related('empleado')
 
     for v in vacs_sal:
-        lista_salidas.append({
-            'empleado': v.empleado,
-            'fecha_inicio': v.fecha_inicio,
-            'dias_totales': v.dias_totales,
-            'motivo': 'Vacaciones',
-            'es_licencia': False
-        })
-
-    # 2. Licencias futuras
-    lics_sal = Licencia.objects.filter(
-        fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida, estado='APROBADO', empleado__activo=True
-    ).select_related('empleado')
-
+        lista_salidas.append({'empleado': v.empleado, 'fecha_inicio': v.fecha_inicio, 'dias_totales': v.dias_totales, 'motivo': 'Vacaciones', 'es_licencia': False})
     for l in lics_sal:
-        lista_salidas.append({
-            'empleado': l.empleado,
-            'fecha_inicio': l.fecha_inicio,
-            'dias_totales': l.dias_totales,
-            'motivo': l.get_tipo_display(),
-            'es_licencia': True
-        })
+        lista_salidas.append({'empleado': l.empleado, 'fecha_inicio': l.fecha_inicio, 'dias_totales': l.dias_totales, 'motivo': l.get_tipo_display(), 'es_licencia': True})
 
     lista_salidas.sort(key=lambda x: x['fecha_inicio'])
 
     # --- E. CONTADORES ---
     total_empleados = Empleado.objects.filter(activo=True).count()
-    total_ausentes_real = len(procesados_ausentes)
-
-    presentes = total_empleados - total_ausentes_real
-    if presentes < 0: presentes = 0
-
-    solo_vacaciones = len([x for x in lista_ausentes if not x['es_licencia']])
+    presentes = max(0, total_empleados - total_ausentes_real)
 
     # --- F. DATOS PARA GRÁFICOS ---
     grafico_torta_data = [presentes, total_ausentes_real]
-    anio_actual = timezone.now().year
+    
+    anio_actual = hoy.year
     datos_mensuales = [0] * 12
 
-    vacaciones_mes = SolicitudVacaciones.objects.filter(
-        fecha_inicio__year=anio_actual, estado='APROBADO'
-    ).annotate(mes=ExtractMonth('fecha_inicio')).values('mes').annotate(total=Count('id'))
+    vacaciones_mes = SolicitudVacaciones.objects.filter(fecha_inicio__year=anio_actual, estado='APROBADO').annotate(mes=ExtractMonth('fecha_inicio')).values('mes').annotate(total=Count('id'))
+    licencias_mes = Licencia.objects.filter(fecha_inicio__year=anio_actual, estado='APROBADO').annotate(mes=ExtractMonth('fecha_inicio')).values('mes').annotate(total=Count('id'))
 
-    for v in vacaciones_mes:
-        if v['mes']:
-            datos_mensuales[v['mes'] - 1] += v['total']
-
-    licencias_mes = Licencia.objects.filter(
-        fecha_inicio__year=anio_actual, estado='APROBADO'
-    ).annotate(mes=ExtractMonth('fecha_inicio')).values('mes').annotate(total=Count('id'))
-
-    for l in licencias_mes:
-        if l['mes']:
-            datos_mensuales[l['mes'] - 1] += l['total']
+    for d in list(vacaciones_mes) + list(licencias_mes):
+        if d['mes']:
+            datos_mensuales[d['mes'] - 1] += d['total']
 
     context = {
         'pendientes': pendientes,
