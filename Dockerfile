@@ -23,10 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Ahora sí, copiamos todo el resto del código del proyecto
 COPY . /app/
 
-# ✅ ESTA ES LA LÍNEA QUE TE FALTA
-# Ejecuta el comando para que Django junte todos los CSS/JS en la carpeta STATIC_ROOT
-RUN python manage.py collectstatic --noinput
-
 # Exponemos el puerto 8000 que es el que Render espera escuchar
 EXPOSE 8000
 
