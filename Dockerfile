@@ -1,5 +1,5 @@
 # Usamos una imagen oficial y súper liviana de Python
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 # Evitamos que Python genere archivos basura (.pyc) y forzamos la salida por consola
 ENV PYTHONDONTWRITEBYTECODE=1
