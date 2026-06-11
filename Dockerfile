@@ -23,6 +23,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Ahora sí, copiamos todo el resto del código del proyecto
 COPY . /app/
 
+
+ENV SECRET_KEY=clave_temporal_para_build_12345
+ENV DEBUG=False
+
 # 👇 PASO CLAVE: Recolectamos todos los archivos estáticos (CSS/JS) dentro del contenedor
 RUN python manage.py collectstatic --noinput
 
