@@ -52,3 +52,33 @@ document.addEventListener('DOMContentLoaded', function () {
         calendar.render();
     }
 });
+
+// Lógica Global de Modo Oscuro
+const btnTheme = document.getElementById('btnTheme');
+const iconTheme = btnTheme ? btnTheme.querySelector('i') : null;
+const html = document.documentElement;
+const savedTheme = localStorage.getItem('theme') || 'light';
+
+html.setAttribute('data-bs-theme', savedTheme);
+updateIcon(savedTheme);
+
+if (btnTheme) {
+    btnTheme.addEventListener('click', () => {
+        const currentTheme = html.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        html.setAttribute('data-bs-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateIcon(newTheme);
+    });
+}
+
+function updateIcon(theme) {
+    if (!iconTheme) return;
+    if(theme === 'dark') { 
+        iconTheme.classList.replace('bi-moon-stars-fill', 'bi-sun-fill'); 
+        btnTheme.classList.replace('btn-outline-secondary', 'btn-outline-light'); 
+    } else { 
+        iconTheme.classList.replace('bi-sun-fill', 'bi-moon-stars-fill'); 
+        btnTheme.classList.replace('btn-outline-light', 'btn-outline-secondary'); 
+    }
+}

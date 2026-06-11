@@ -1,0 +1,255 @@
+/* ==========================================
+   FIX: FONDOS INTERNOS REBELDES Y LISTAS
+   ========================================== */
+/* Forzamos a que el cuerpo, encabezado y listas sean transparentes 
+   para que dejen ver el azul noche de la tarjeta padre */
+[data-bs-theme="dark"] .card-body,
+[data-bs-theme="dark"] .card-header,
+[data-bs-theme="dark"] .card-footer,
+[data-bs-theme="dark"] .list-group {
+    background-color: transparent !important;
+}
+
+/* Le sacamos el borde redondeado propio a los items de la lista 
+   para que no compitan con el borde redondeado de la tarjeta maestra */
+[data-bs-theme="dark"] .list-group-item {
+    border-radius: 0 !important;
+}
+
+/* Si usaste un "bg-white" directamente en el div que envuelve al calendario, lo matamos acá: */
+[data-bs-theme="dark"] .bg-white {
+    background-color: transparent !important;
+}
+
+/* =========================================================
+   OVERRIDE ESTILO TAILWIND 2026 (Minimalismo & Flat Design)
+   ========================================================= */
+:root {
+    --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+    --bs-body-bg: #f8fafc;
+    --bs-body-color: #334155;
+    --bs-border-color: #e2e8f0;
+    --bs-primary: #3b82f6;
+    --bs-success: #10b981;
+    --bs-danger: #ef4444;
+    --bs-warning: #f59e0b;
+    --bs-info: #0ea5e9;
+}
+
+body {
+    font-family: var(--bs-font-sans-serif);
+    letter-spacing: -0.015em;
+    transition: background-color 0.3s ease;
+}
+
+/* Navbar estilo Glassmorphism / Flotante */
+.navbar {
+    background-color: rgba(255, 255, 255, 0.8) !important;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+    box-shadow: none !important;
+}
+.navbar-brand, .nav-link { color: #0f172a !important; font-weight: 500; }
+.nav-link:hover { color: #3b82f6 !important; }
+
+/* Tarjetas estilo Tailwind (shadow-sm a shadow-md) */
+.card {
+    border: 1px solid var(--bs-border-color) !important;
+    border-radius: 1rem !important;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05) !important;
+    transition: box-shadow 0.2s ease;
+    overflow: hidden !important;
+}
+.card-header {
+    background-color: transparent !important;
+    border-bottom: 1px solid var(--bs-border-color);
+    padding: 1.25rem 1.5rem;
+}
+
+/* Botones Planos */
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border: none;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    transition: all 0.2s;
+}
+.btn-primary { background-color: var(--bs-primary); }
+.btn-primary:hover { background-color: #2563eb; transform: translateY(-1px); }
+.btn-outline-secondary { border: 1px solid #cbd5e1; color: #475569; background: white; }
+.btn-outline-secondary:hover { background: #f1f5f9; color: #0f172a; }
+
+/* Inputs limpios */
+.form-control, .form-select {
+    border-radius: 0.5rem;
+    border: 1px solid #cbd5e1;
+    padding: 0.6rem 1rem;
+    background-color: #ffffff;
+    box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+.form-control:focus, .form-select:focus {
+    border-color: #93c5fd;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Tablas airy (espaciosas) */
+.table { margin-bottom: 0; }
+.table th { font-weight: 600; color: #64748b; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding-top: 1rem; padding-bottom: 1rem; }
+.table td { padding: 1rem 0.5rem; color: #334155; vertical-align: middle; }
+
+/* Ajustes Modo Oscuro Minimalista */
+[data-bs-theme="dark"] body { background-color: #0f172a; color: #f8fafc; }
+[data-bs-theme="dark"] .navbar { background-color: rgba(15, 23, 42, 0.8) !important; border-color: #1e293b !important; }
+[data-bs-theme="dark"] .navbar-brand, [data-bs-theme="dark"] .nav-link { color: #f8fafc !important; }
+
+/* Forzamos el fondo de las tarjetas y anulamos los blancos de Bootstrap */
+[data-bs-theme="dark"] .card, [data-bs-theme="dark"] .bg-body, [data-bs-theme="dark"] .bg-light, [data-bs-theme="dark"] .bg-white { 
+    background-color: #1e293b !important; 
+    border-color: #334155 !important; 
+}
+[data-bs-theme="dark"] .bg-body-tertiary { background-color: #0f172a !important; }
+
+/* Inputs oscuros y prolijos */
+[data-bs-theme="dark"] .form-control, [data-bs-theme="dark"] .form-select { background-color: #0f172a; border-color: #334155; color: white; }
+
+/* FIX: TABLAS INTEGRADAS AL MODO OSCURO */
+[data-bs-theme="dark"] .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #f8fafc;
+    --bs-table-border-color: #334155;
+    --bs-table-hover-bg: rgba(248, 250, 252, 0.05);
+    --bs-table-hover-color: #f8fafc;
+}
+[data-bs-theme="dark"] .table-light th, [data-bs-theme="dark"] .table th { 
+    background-color: #0f172a !important;
+    color: #94a3b8 !important; 
+    border-bottom: 1px solid #334155 !important; 
+}
+[data-bs-theme="dark"] .table td { 
+    background-color: transparent !important; 
+    border-bottom-color: #334155; 
+}
+
+/* Avatars */
+.avatar-circle { width: 40px; height: 40px; background-color: #e2e8f0; color: #475569; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; font-weight: 600; }
+
+/* FIX: LISTAS (LIST-GROUP) EN MODO OSCURO */
+[data-bs-theme="dark"] .list-group-item {
+    background-color: transparent !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+[data-bs-theme="dark"] .list-group-item:hover {
+    background-color: rgba(248, 250, 252, 0.05) !important;
+}
+[data-bs-theme="dark"] .list-group-item .empleado-link { color: #f8fafc !important; }
+[data-bs-theme="dark"] .list-group-item .empleado-link:hover { color: #93c5fd !important; }
+[data-bs-theme="dark"] .text-muted { color: #94a3b8 !important; }
+
+/* FIX DEFINITIVO: CALENDARIO MODO OSCURO */
+[data-bs-theme="dark"] .fc {
+    --fc-page-bg-color: transparent;
+    --fc-neutral-bg-color: #1e293b;
+    --fc-neutral-text-color: #94a3b8;
+    --fc-border-color: #334155;
+    --fc-today-bg-color: rgba(59, 130, 246, 0.15);
+    color: #f8fafc;
+}
+[data-bs-theme="dark"] .fc-theme-standard th,
+[data-bs-theme="dark"] .fc-theme-standard td,
+[data-bs-theme="dark"] .fc-view-harness,
+[data-bs-theme="dark"] .fc-scrollgrid {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+[data-bs-theme="dark"] .fc-day-today { background-color: var(--fc-today-bg-color) !important; }
+[data-bs-theme="dark"] .fc-col-header-cell-cushion,
+[data-bs-theme="dark"] .fc-daygrid-day-number {
+    color: #f8fafc !important; 
+    text-decoration: none;
+}
+[data-bs-theme="dark"] .fc .fc-button-primary {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+    box-shadow: none !important;
+    text-transform: capitalize;
+}
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):hover,
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled):active,
+[data-bs-theme="dark"] .fc .fc-button-primary:not(:disabled).fc-button-active {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+}
+
+/* FIX: ENCABEZADOS DE FORMULARIOS (LABELS) */
+[data-bs-theme="dark"] .form-label,
+[data-bs-theme="dark"] .text-secondary {
+    color: #94a3b8 !important;
+}
+
+/* FIX: MARCO EXTERIOR DEL CALENDARIO */
+[data-bs-theme="dark"] .fc table,
+[data-bs-theme="dark"] table.fc-scrollgrid {
+    border-color: #334155 !important;
+    border-collapse: collapse !important;
+}
+
+/* ==========================================
+   FIX: CHECKBOXES, RADIOS Y TEXTOS REBELDES
+   ========================================== */
+[data-bs-theme="dark"] .form-check-label,
+[data-bs-theme="dark"] .text-dark {
+    color: #f8fafc !important; /* Fuerza el texto a blanco humo */
+}
+
+/* Oscurecemos el cuadradito del checkbox cuando no está tildado */
+[data-bs-theme="dark"] .form-check-input {
+    background-color: #0f172a;
+    border-color: #475569;
+}
+
+/* Color azul Tailwind cuando el checkbox ESTÁ tildado */
+[data-bs-theme="dark"] .form-check-input:checked {
+    background-color: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+}
+
+/* ==========================================
+   ESTILOS EXCLUSIVOS DEL DASHBOARD
+   ========================================== */
+/* Tarjetas Contadores */
+.card-counter { 
+    border: none !important; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
+    color: white; 
+    transition: transform 0.2s; 
+}
+.card-counter:hover { transform: translateY(-5px); }
+.bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+.bg-gradient-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.bg-gradient-warning { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
+
+/* Listas y Enlaces (Dashboard) */
+.empleado-link { color: var(--bs-body-color); font-weight: bold; text-decoration: none; transition: color 0.2s; }
+.empleado-link:hover { color: #3b82f6; text-decoration: underline; }
+
+/* Calendario Adaptativo Container */
+#calendar-container {
+    background: #ffffff;
+    padding: 25px;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05);
+    margin-top: 30px;
+    transition: background-color 0.3s;
+}
+#calendar { max-width: 100%; min-height: 650px; font-size: 0.9rem; }
+
+/* Contenedor del calendario en modo oscuro */
+[data-bs-theme="dark"] #calendar-container { 
+    background: #1e293b; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2); 
+}

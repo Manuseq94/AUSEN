@@ -2,45 +2,6 @@
 
 {% block title %}Panel - AUSEN{% endblock %}
 
-{% block extra_css %}
-    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
-
-    <style>
-        /* Estilos EXCLUSIVOS del Dashboard */
-
-        /* Tarjetas Contadores */
-        .card-counter { border: none; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); color: white; transition: transform 0.2s; }
-        .card-counter:hover { transform: translateY(-5px); }
-        .bg-gradient-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
-        .bg-gradient-success { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
-        .bg-gradient-warning { background: linear-gradient(135deg, #f6d365 0%, #fda085 100%); }
-
-        .card { border-radius: 10px; border: none; }
-        .list-group-item { border-left: 4px solid transparent; transition: background-color 0.2s; }
-        .list-group-item:hover { background-color: var(--bs-tertiary-bg); }
-        .empleado-link { color: var(--bs-body-color); font-weight: bold; }
-        .empleado-link:hover { color: #0d6efd; text-decoration: underline; }
-
-        /* Calendario Adaptativo */
-        #calendar-container {
-            background: var(--bs-body-bg);
-            padding: 25px;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-top: 30px;
-            transition: background-color 0.3s;
-        }
-        #calendar { max-width: 100%; min-height: 650px; font-size: 0.9rem; }
-
-        /* Ajustes específicos para Modo Oscuro en Calendario */
-        [data-bs-theme="dark"] #calendar-container { box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
-        [data-bs-theme="dark"] .fc { color: #fff; }
-        [data-bs-theme="dark"] .fc-theme-standard td,
-        [data-bs-theme="dark"] .fc-theme-standard th { border-color: #444; }
-        .fc-day-today { background-color: rgba(255, 193, 7, 0.15) !important; }
-    </style>
-{% endblock %}
-
 {% block content %}
 
     {% if messages %}
@@ -306,6 +267,7 @@
 
 {% block extra_js %}
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js'></script>
 
     <script>
       document.addEventListener('DOMContentLoaded', function() {
@@ -371,9 +333,8 @@
                     data: {
                         labels: ['Presentes', 'Ausentes'],
                         datasets: [{
-                            // 👇 El filtro default:"[]" evita errores si Django manda vacío
                             data: {{ grafico_torta_data|default:"[]"|safe }},
-                            backgroundColor: ['#198754', '#ffc107'],
+                            backgroundColor: ['#10b981', '#f59e0b'],
                             borderWidth: 0,
                             hoverOffset: 4
                         }]
@@ -382,7 +343,7 @@
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
-                            legend: { position: 'bottom', labels: { color: colorTexto, font: { family: "'Segoe UI', sans-serif" } } }
+                            legend: { position: 'bottom', labels: { color: colorTexto, font: { family: "'Inter', sans-serif" } } }
                         }
                     }
                 });
@@ -398,7 +359,7 @@
                         datasets: [{
                             label: 'Solicitudes y Licencias',
                             data: {{ grafico_barras_data|default:"[]"|safe }},
-                            backgroundColor: '#0d6efd',
+                            backgroundColor: '#3b82f6',
                             borderRadius: 4
                         }]
                     },

@@ -1,43 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
-
 <head>
     <meta charset="UTF-8">
     <title>{% block title %}Documento AUSEN{% endblock %}</title>
 
     <style>
-        /* Configuraciones globales del PDF */
         @page {
             size: A4;
-            margin: 2cm;
+            margin: 2.5cm 2cm;
         }
 
         body {
-            font-family: Helvetica, Arial, sans-serif;
-            font-size: 12pt;
-            line-height: 1.5;
-            color: #333;
+            font-family: Helvetica, sans-serif;
+            font-size: 10.5pt;
+            line-height: 1.6;
+            color: #334155; /* slate-700 */
         }
 
-        /* Estilos base (Cabecera y Pie) */
+        /* Cabecera Limpia (Alineada a la izquierda) */
         .header {
-            text-align: center;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #0d6efd;
-            padding-bottom: 10px;
+            text-align: left;
+            margin-bottom: 40px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e2e8f0; /* slate-200 */
         }
 
         .header h1 {
             margin: 0;
-            color: #0d6efd;
-            text-transform: uppercase;
-            font-size: 18pt;
+            color: #0f172a; /* slate-900 */
+            font-size: 22pt;
+            font-weight: normal;
+            letter-spacing: -0.5px;
         }
 
         .header p {
             margin: 5px 0 0;
-            font-size: 10pt;
-            color: #666;
+            font-size: 9pt;
+            color: #64748b; /* slate-500 */
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Estructura general de contenido */
+        .content {
+            margin-bottom: 30px;
+        }
+
+        /* Cajas de datos planas, sin borde fuerte */
+        .datos-box, .box, .breakdown {
+            background-color: #f8fafc; /* slate-50 */
+            padding: 15px 20px;
+            border-radius: 6px;
+            border: 1px solid #f1f5f9; /* slate-100 */
+            margin-bottom: 20px;
+        }
+
+        table { width: 100%; margin-top: 10px; border-collapse: collapse; }
+        td { vertical-align: top; padding: 6px 0; }
+
+        .label {
+            font-weight: bold;
+            color: #94a3b8; /* slate-400 */
+            font-size: 8.5pt;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .value { color: #0f172a; font-weight: bold; }
+
+        /* Firmas Minimalistas */
+        .firmas { margin-top: 60px; width: 100%; }
+        .firma-box {
+            text-align: center;
+            border-top: 1px solid #cbd5e1; /* slate-300 */
+            margin: 0 30px;
+            padding-top: 8px;
+            font-size: 9pt;
+            color: #475569;
         }
 
         .footer {
@@ -45,47 +85,20 @@
             bottom: 0;
             left: 0;
             right: 0;
-            text-align: center;
+            text-align: left;
             font-size: 8pt;
-            color: #999;
-            border-top: 1px solid #eee;
+            color: #94a3b8;
+            border-top: 1px solid #f1f5f9;
             padding-top: 10px;
-        }
-
-        /* Utilidades globales para tablas y firmas */
-        table {
-            width: 100%;
-            margin-top: 10px;
-        }
-
-        td {
-            vertical-align: top;
-            padding: 5px;
-        }
-
-        .firmas {
-            margin-top: 80px;
-            width: 100%;
-        }
-
-        .firma-box {
-            text-align: center;
-            border-top: 1px solid #000;
-            margin: 0 40px;
-            padding-top: 10px;
-            font-size: 10pt;
         }
     </style>
-
     {% block extra_style %}{% endblock %}
-
 </head>
-
 <body>
 
     <div class="header">
         <h1>{% block header_title %}AUSEN{% endblock %}</h1>
-        <p>{% block header_subtitle %}Departamento de Recursos Humanos{% endblock %}</p>
+        <p>{% block header_subtitle %}Recursos Humanos{% endblock %}</p>
     </div>
 
     <div class="content">
@@ -93,10 +106,8 @@
     </div>
 
     <div class="footer">
-        Este documento es un comprobante interno de la empresa. Generado el {{ hoy|date:"d/m/Y H:i" }} por el sistema
-        AUSEN.
+        AUSEN &middot; Comprobante Interno &middot; Generado el {{ hoy|date:"d/m/Y H:i" }}
     </div>
 
 </body>
-
 </html>
