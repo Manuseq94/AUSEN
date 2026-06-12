@@ -301,3 +301,26 @@ body {
 [data-bs-theme="dark"] td.text-secondary {
     color: #cbd5e1 !important; 
 }
+
+/* ==========================================
+   FIX: LUPA Y BORDES DE BÚSQUEDA (MODO OSCURO)
+   ========================================== */
+[data-bs-theme="dark"] .input-group-text {
+    background-color: #0f172a !important;
+    border-color: #334155 !important;
+    color: #94a3b8 !important;
+}
+
+/* ==========================================
+   FIX: FORMULARIOS EN MODO CLARO
+   ========================================== */
+html:not([data-bs-theme="dark"]) .card-body label,
+html:not([data-bs-theme="dark"]) .card-body .form-label,
+html:not([data-bs-theme="dark"]) .card-body .form-check-label {
+    color: #334155 !important;
+}
+
+html:not([data-bs-theme="dark"]) .card-body .form-text,
+html:not([data-bs-theme="dark"]) .card-body small {
+    color: #64748b !important;
+}
