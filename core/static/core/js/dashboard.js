@@ -66,7 +66,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     labels: ['Presentes', 'Ausentes'],
                     datasets: [{
                         data: data.torta, // Usamos la variable inyectada
-                        backgroundColor: ['#10b981', '#f59e0b'],
+                        // CAMBIO: Verde Salvia y Terracota Suave
+                        backgroundColor: ['#68947b', '#d99c85'], 
                         borderWidth: 0,
                         hoverOffset: 4
                     }]
@@ -91,8 +92,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     datasets: [{
                         label: 'Solicitudes y Licencias',
                         data: data.barras, // Usamos la variable inyectada
-                        backgroundColor: '#3b82f6',
-                        borderRadius: 4
+                        // CAMBIO: Azul Acero translúcido con borde sólido
+                        backgroundColor: 'rgba(91, 121, 153, 0.8)', 
+                        borderColor: '#5b7999',
+                        borderWidth: 1,
+                        borderRadius: 4 // Bordes redondeados modernos
                     }]
                 },
                 options: {

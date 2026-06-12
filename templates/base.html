@@ -37,7 +37,26 @@
                 <li class="nav-item"><a class="nav-link" href="{% url 'lista_empleados' %}">Empleados</a></li>
                 <li class="nav-item"><a class="nav-link text-warning fw-bold" href="{% url 'central_operaciones' %}"><i class="bi bi-lightning-charge-fill me-1"></i>Carga Rápida</a>
                 </li>
-                <li class="nav-item"><a class="nav-link text-secondary fw-bold" href="{% url 'configuracion' %}" title="Configuración">Configuración</a></li>
+                <li class="nav-item dropdown dropdown-hover">
+                    <a class="nav-link text-secondary fw-bold dropdown-toggle" href="{% url 'configuracion' %}" id="navbarConfig" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Configuración
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-0" aria-labelledby="navbarConfig">
+                        <li><h6 class="dropdown-header text-uppercase" style="letter-spacing: 1px;">Administración</h6></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'gestion_usuarios' %}"><i class="bi bi-shield-lock me-2 text-primary"></i>Usuarios y Accesos</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'crear_feriado' %}"><i class="bi bi-calendar-event me-2 text-warning"></i>Gestión de Feriados</a></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'historial_general' %}"><i class="bi bi-card-list me-2 text-secondary"></i>Auditoría Global</a></li>
+                        
+                        <li><hr class="dropdown-divider opacity-25"></li>
+                        
+                        <li><h6 class="dropdown-header text-uppercase" style="letter-spacing: 1px;">Reportes</h6></li>
+                        <li><a class="dropdown-item py-2" href="{% url 'exportar_saldos' %}"><i class="bi bi-file-earmark-excel me-2 text-success"></i>Descargar Saldos (CSV)</a></li>
+                        
+                        <li><hr class="dropdown-divider opacity-25"></li>
+                        
+                        <li><a class="dropdown-item fw-bold py-2 bg-body-tertiary" href="{% url 'configuracion' %}"><i class="bi bi-gear-fill me-2"></i>Ajustes Avanzados</a></li>
+                    </ul>
+                </li>
                 <li class="d-none d-lg-block border-start border-secondary mx-2" style="height: 24px;"></li>
             {% endif %}
 

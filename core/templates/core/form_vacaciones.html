@@ -86,7 +86,7 @@
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <a href="{% url 'detalle_empleado' empleado.id %}" class="btn btn-outline-secondary me-md-2">Cancelar</a>
 
-                        <button type="submit" class="btn {% if es_edicion %}btn-warning text-dark{% else %}btn-primary{% endif %} fw-bold px-4">
+                        <button type="submit" class="btn {% if es_edicion %}btn-warning{% else %}btn-primary{% endif %} fw-bold px-4">
                             {% if es_edicion %}Guardar Cambios{% else %}Confirmar y Descontar{% endif %}
                         </button>
                     </div>

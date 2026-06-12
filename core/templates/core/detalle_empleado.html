@@ -89,7 +89,7 @@
                 <div class="card-header bg-transparent border-0 py-3 d-flex justify-content-between align-items-center">
                     <h5 class="mb-0 fw-bold">📅 Tu Bolsa de Días</h5>
                     {% if user.is_staff %}
-                    <a href="{% url 'cargar_saldo_historico' empleado.id %}" class="btn btn-sm btn-warning text-dark fw-bold shadow-sm">+ Ajuste Manual</a>
+                    <a href="{% url 'cargar_saldo_historico' empleado.id %}" class="btn btn-sm btn-warning fw-bold shadow-sm">+ Ajuste Manual</a>
                     {% endif %}
                 </div>
                 <div class="card-body">

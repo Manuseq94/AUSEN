@@ -1,16 +1,26 @@
 /* =========================================================
-   1. VARIABLES GLOBALES Y BASE (Minimalismo & Flat Design)
+   1. VARIABLES GLOBALES Y BASE (Paleta SaaS Desaturada)
    ========================================================= */
 :root {
     --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
     --bs-body-bg: #f8fafc;
-    --bs-body-color: #334155;
     --bs-border-color: #e2e8f0;
-    --bs-primary: #3b82f6;
-    --bs-success: #10b981;
-    --bs-danger: #ef4444;
-    --bs-warning: #f59e0b;
-    --bs-info: #0ea5e9;
+    
+    /* Paleta Corporativa AUSEN */
+    --bs-primary: #5b7999; /* Azul Acero */
+    --bs-success: #68947b; /* Verde Salvia */
+    --bs-danger: #bd7b61;  /* Terracota (Peligro/Borrar) */
+    --bs-warning: #d99c85; /* Terracota Suave (Avisos/Ajustes) */
+    --bs-info: #7c98b3;    /* Azul Acero Claro */
+}
+
+/* Fuerza a los botones warning a tener texto blanco (por defecto es negro y queda feo) */
+.btn-warning {
+    color: white !important;
+}
+.btn-warning:hover {
+    color: white !important;
+    background-color: #c48973 !important;
 }
 
 body {
@@ -323,4 +333,130 @@ html:not([data-bs-theme="dark"]) .card-body .form-check-label {
 html:not([data-bs-theme="dark"]) .card-body .form-text,
 html:not([data-bs-theme="dark"]) .card-body small {
     color: #64748b !important;
+}
+
+/* ==========================================
+   SCROLLBAR MODERNO (Estilo SaaS Premium)
+   ========================================== */
+/* Hacemos la barra más finita (8px en vez de los 16px por defecto) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+/* El fondo por donde corre la barra (transparente para que no moleste) */
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+/* El "pulgar" (la barrita que agarrás para bajar) en MODO CLARO */
+::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1; /* Gris suave */
+    border-radius: 10px; /* Bordes bien redonditos */
+}
+
+/* Cuando le pasás el mouse por encima en MODO CLARO */
+::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8; /* Gris un poco más oscuro */
+}
+
+/* --- Adaptación automática al MODO OSCURO --- */
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb {
+    background-color: #334155; /* Gris azulado oscuro */
+}
+
+[data-bs-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background-color: #475569; /* Se ilumina un toque al pasar el mouse */
+}
+
+/* ==========================================
+   FIX: TEXTOS INVISIBLES EN TARJETAS (DASHBOARD)
+   ========================================== */
+/* Forzamos a que TODO el contenido de la tarjeta sea blanco */
+.card-counter,
+.card-counter h2,
+.card-counter h6,
+.card-counter p,
+.card-counter i,
+.card-counter .text-muted,
+.card-counter .text-secondary {
+    color: #ffffff !important;
+}
+
+/* Le damos una sutil sombra al texto para que resalte más sobre los colores pastel */
+.card-counter h2,
+.card-counter h6,
+.card-counter i {
+    text-shadow: 0px 1px 3px rgba(0,0,0,0.15);
+}
+
+/* ==========================================
+   FIX: BOTÓN DE AJUSTE MANUAL (WARNING)
+   ========================================== */
+/* Pisamos cualquier clase 'text-dark' rebelde y forzamos el texto blanco */
+.btn-warning,
+.btn-warning i,
+.btn-warning.text-dark {
+    color: #ffffff !important;
+}
+
+/* Oscurecemos un poquito el fondo al pasar el mouse para que haya feedback visual */
+.btn-warning:hover,
+.btn-warning.text-dark:hover {
+    color: #ffffff !important;
+    background-color: #c48973 !important; 
+    border-color: #c48973 !important;
+}
+
+/* ==========================================
+   FIX: ACORDEÓN DE AUDITORÍA (MODO OSCURO)
+   ========================================== */
+/* Fondo general del acordeón */
+[data-bs-theme="dark"] .accordion-item,
+[data-bs-theme="dark"] .accordion-body {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+/* Arreglo para los encabezados fijos (sticky-top) que usan bg-body */
+[data-bs-theme="dark"] .audit-table-container th.bg-body {
+    background-color: #1e293b !important;
+    color: #94a3b8 !important;
+    border-bottom-color: #334155 !important;
+}
+
+/* Arreglo para las rayas de la tabla (table-striped) */
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * {
+    background-color: rgba(248, 250, 252, 0.03) !important; /* Raya súper sutil */
+    color: #f8fafc !important;
+}
+
+/* Aseguramos que el texto de las filas pares también sea claro */
+[data-bs-theme="dark"] .table-striped > tbody > tr:nth-of-type(even) > * {
+    color: #cbd5e1 !important;
+}
+
+/* ==========================================
+   EFECTO DROPDOWN SAAS (HOVER)
+   ========================================== */
+/* Solo aplicamos el hover en pantallas grandes (computadoras) */
+@media all and (min-width: 992px) {
+    .dropdown-hover:hover .dropdown-menu {
+        display: block;
+        margin-top: 0; /* Pega el menú al navbar */
+        animation: fadeDropdown 0.2s ease-in-out forwards;
+    }
+}
+
+/* Animación de entrada suave (aparece de abajo hacia arriba) */
+@keyframes fadeDropdown {
+    0% { opacity: 0; transform: translateY(10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Le damos un toque más redondo y moderno al menú */
+.dropdown-menu {
+    border-radius: 12px !important;
+    overflow: hidden;
 }
