@@ -438,25 +438,180 @@ html:not([data-bs-theme="dark"]) .card-body small {
 }
 
 /* ==========================================
-   EFECTO DROPDOWN SAAS (HOVER)
+   EFECTO DROPDOWN SAAS (GRACE PERIOD) - V4
    ========================================== */
-/* Solo aplicamos el hover en pantallas grandes (computadoras) */
 @media all and (min-width: 992px) {
+    /* 1. Estado inactivo (Oculto pero esperando) */
+    .dropdown-hover .dropdown-menu {
+        display: block !important; /* Pisamos el display:none de Bootstrap */
+        top: 100% !important;
+        
+        /* Ocultamos con opacidad en lugar de display:none para poder animarlo */
+        visibility: hidden;
+        opacity: 0;
+        margin-top: 15px !important; /* Nace un poco más abajo */
+        pointer-events: none; /* Ignora clics mientras está invisible */
+        
+        /* LA MAGIA (Al salir): Tarda 0.25s en desaparecer. Le da tiempo al mouse a cruzar. */
+        transition: opacity 0.25s ease, margin-top 0.25s ease, visibility 0s linear 0.25s;
+    }
+
+    /* 2. Estado Activo (Mouse arriba del botón O arriba del menú) */
     .dropdown-hover:hover .dropdown-menu {
-        display: block;
-        margin-top: 0; /* Pega el menú al navbar */
-        animation: fadeDropdown 0.2s ease-in-out forwards;
+        visibility: visible;
+        opacity: 1;
+        margin-top: 8px !important; /* Posición final (hueco elegante) */
+        pointer-events: auto; /* Reactivamos los clics */
+        
+        /* Al entrar: Aparece casi instantáneo */
+        transition: opacity 0.15s ease, margin-top 0.15s ease, visibility 0s linear 0s;
+    }
+
+    /* 3. El puente físico anclado al padre */
+    .dropdown-hover::after {
+        content: "";
+        position: absolute;
+        top: 100%; /* Justo debajo del botón */
+        left: 0;
+        width: 100%;
+        height: 20px; /* Cubre el hueco físicamente */
+        background: transparent;
     }
 }
 
-/* Animación de entrada suave (aparece de abajo hacia arriba) */
-@keyframes fadeDropdown {
-    0% { opacity: 0; transform: translateY(10px); }
-    100% { opacity: 1; transform: translateY(0); }
+/* ==========================================
+   BOTÓN CTA SAAS (CARGA RÁPIDA EN NAVBAR)
+   ========================================== */
+.btn-cta-nav {
+    background-color: #334155; /* Slate 700 */
+    color: #ffffff !important;
+    border: 1px solid #475569;
+    transition: all 0.2s ease;
 }
 
-/* Le damos un toque más redondo y moderno al menú */
-.dropdown-menu {
-    border-radius: 12px !important;
-    overflow: hidden;
+.btn-cta-nav:hover {
+    background-color: #0f172a; /* Slate 900 */
+    border-color: #0f172a;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Adaptación automática al Modo Oscuro */
+[data-bs-theme="dark"] .btn-cta-nav {
+    background-color: #f8fafc; /* Blanco humo */
+    color: #0f172a !important; /* Letra oscura */
+    border-color: #e2e8f0;
+}
+
+[data-bs-theme="dark"] .btn-cta-nav:hover {
+    background-color: #cbd5e1; /* Gris clarito */
+    box-shadow: 0 6px 12px rgba(255, 255, 255, 0.1) !important;
+}
+
+/* ==========================================
+   ANIMACIÓN: PULSO DE NOTIFICACIONES
+   ========================================== */
+.indicador-pulso {
+    animation: pulse-danger 2s infinite;
+}
+
+@keyframes pulse-danger {
+    0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+    70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* ==========================================
+   FIX: NOTIFICACIONES EN MODO OSCURO
+   ========================================== */
+/* Fondo general de la caja del menú */
+[data-bs-theme="dark"] .dropdown-menu {
+    background-color: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Fondo de la cabecera (título) y del pie (ver detalles) */
+[data-bs-theme="dark"] .dropdown-menu .bg-body-tertiary {
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+}
+
+/* Forzamos que los textos negros pasen a blanco humo */
+[data-bs-theme="dark"] .dropdown-menu .text-body,
+[data-bs-theme="dark"] .dropdown-menu h6 {
+    color: #f8fafc !important;
+}
+
+/* Hover suave al pasar el mouse por cada notificación */
+[data-bs-theme="dark"] .dropdown-menu .dropdown-item:hover {
+    background-color: rgba(248, 250, 252, 0.05) !important;
+}
+
+/* ==========================================
+   FIX: NOTIFICACIONES FUERA DE PANTALLA
+   ========================================== */
+/* Forzamos que los dropdowns de la derecha crezcan hacia la izquierda */
+.dropdown-hover .dropdown-menu-end {
+    right: 0 !important;
+    left: auto !important;
+}
+
+/* ==========================================
+   ESTADOS DE NOTIFICACIONES (LEÍDO / NO LEÍDO)
+   ========================================== */
+.noti-item {
+    transition: background-color 0.4s ease;
+}
+
+/* Modo Claro: Fondo apenas gris/azulado para "No Leído" */
+html:not([data-bs-theme="dark"]) .unread-noti {
+    background-color: #f1f5f9 !important; /* Slate 100 */
+}
+
+/* Modo Oscuro: Fondo apenas más claro que el base */
+[data-bs-theme="dark"] .unread-noti {
+    background-color: #334155 !important; /* Slate 700 */
+}
+
+/* ==========================================
+   TOGGLE SWITCH SAAS (CARGA RÁPIDA Y FORMULARIOS)
+   ========================================== */
+/* Hacemos el switch un poco más grande y elegante */
+.form-switch .form-check-input {
+    width: 2.8em !important;
+    height: 1.4em !important;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+    margin-top: 0.1em;
+}
+
+/* Color APAGADO (Modo Claro) */
+html:not([data-bs-theme="dark"]) .form-switch .form-check-input {
+    background-color: #cbd5e1; /* Slate 300 */
+    border-color: #cbd5e1;
+}
+
+/* Color APAGADO (Modo Oscuro) */
+[data-bs-theme="dark"] .form-switch .form-check-input {
+    background-color: #475569 !important; /* Slate 600 */
+    border-color: #334155 !important;
+}
+
+/* Color ENCENDIDO (Ambos modos) - Verde SaaS */
+.form-switch .form-check-input:checked {
+    background-color: #10b981 !important; /* Emerald 500 */
+    border-color: #10b981 !important;
+}
+
+/* Ajuste del texto (Label) para que quede bien alineado al switch */
+.form-switch .form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    padding-left: 0.5em;
+    padding-top: 0.2em;
+}
+
+/* Forzamos que el texto sea visible en modo oscuro */
+[data-bs-theme="dark"] .form-switch .form-check-label {
+    color: #f8fafc !important;
 }

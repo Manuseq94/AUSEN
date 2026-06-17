@@ -443,6 +443,12 @@ class CentralSolicitudForm(SolicitudForm):
         # Ponemos al empleado como primer campo
         fields = ['empleado'] + SolicitudForm.Meta.fields
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Inyectamos la clase para el Toggle Switch SaaS dinámicamente
+        if 'solo_habiles' in self.fields:
+            self.fields['solo_habiles'].widget.attrs.update({'class': 'form-check-input shadow-sm'})
+
     def clean(self):
         # 🧠 Truco DRY: Inyectamos el empleado en "self" antes de llamar a la validación 
         # del padre, así SolicitudForm cree que estamos dentro de un legajo individual.
@@ -460,6 +466,11 @@ class CentralLicenciaForm(LicenciaForm):
     class Meta(LicenciaForm.Meta):
         fields = ['empleado'] + LicenciaForm.Meta.fields
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'solo_habiles' in self.fields:
+            self.fields['solo_habiles'].widget.attrs.update({'class': 'form-check-input shadow-sm'})
+
     def clean(self):
         self.empleado = self.cleaned_data.get('empleado')
         return super().clean()
@@ -474,6 +485,11 @@ class CentralPermisoForm(PermisoForm):
     
     class Meta(PermisoForm.Meta):
         fields = ['empleado'] + PermisoForm.Meta.fields
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'solo_habiles' in self.fields:
+            self.fields['solo_habiles'].widget.attrs.update({'class': 'form-check-input shadow-sm'})
 
     def clean(self):
         self.empleado = self.cleaned_data.get('empleado')

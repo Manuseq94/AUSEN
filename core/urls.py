@@ -19,6 +19,7 @@ rutas_inicio = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('configuracion/', views.configuracion, name='configuracion'),
     path('api/calendario/', views.calendario_api, name='calendario_api'),
+    path('notificaciones/', views.todas_notificaciones, name='todas_notificaciones'),
 ]
 
 # ==========================================

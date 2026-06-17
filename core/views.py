@@ -1476,3 +1476,47 @@ def central_operaciones(request):
         'form_permiso': form_permiso,
     }
     return render(request, 'core/central_operaciones.html', context)
+
+@login_required
+def todas_notificaciones(request):
+    if not request.user.is_staff:
+        return redirect('dashboard')
+
+    hoy = timezone.now().date()
+    limite_salida = hoy + timedelta(days=7)
+    limite_regreso = hoy + timedelta(days=4)
+
+    lista_completa = []
+
+    # 1. PENDIENTES
+    for v in SolicitudVacaciones.objects.filter(estado='PENDIENTE').select_related('empleado'):
+        lista_completa.append({'icono': '⏳', 'color': 'warning', 'texto': f"<b>{v.empleado.nombre} {v.empleado.apellido}</b> solicitó Vacaciones.", 'tiempo': "Requiere Acción", 'url': reverse('detalle_empleado', args=[v.empleado.id])})
+        
+    for l in Licencia.objects.filter(estado='PENDIENTE').select_related('empleado'):
+        lista_completa.append({'icono': '🚑', 'color': 'danger', 'texto': f"<b>{l.empleado.nombre} {l.empleado.apellido}</b> cargó una Licencia.", 'tiempo': "Requiere Acción", 'url': reverse('detalle_empleado', args=[l.empleado.id])})
+
+    for p in Permiso.objects.filter(estado='PENDIENTE').select_related('empleado'):
+        lista_completa.append({'icono': '🎫', 'color': 'info', 'texto': f"<b>{p.empleado.nombre} {p.empleado.apellido}</b> solicitó un Permiso.", 'tiempo': "Requiere Acción", 'url': reverse('detalle_empleado', args=[p.empleado.id])})
+
+    # HELPER SALIDAS
+    def agregar_salida(queryset, icono, color, motivo):
+        for obj in queryset:
+            dias = (obj.fecha_inicio - hoy).days
+            tiempo_str = "Hoy" if dias == 0 else ("Mañana" if dias == 1 else f"En {dias} días")
+            lista_completa.append({'icono': icono, 'color': color, 'texto': f"<b>{obj.empleado.nombre} {obj.empleado.apellido}</b> inicia {motivo}.", 'tiempo': tiempo_str, 'url': reverse('detalle_empleado', args=[obj.empleado.id])})
+
+    agregar_salida(SolicitudVacaciones.objects.filter(estado='APROBADO', fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida).select_related('empleado'), '✈️', 'primary', 'vacaciones')
+    agregar_salida(Licencia.objects.filter(estado='APROBADO', fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida).select_related('empleado'), '🏥', 'danger', 'licencia médica')
+    agregar_salida(Permiso.objects.filter(estado='APROBADO', fecha_inicio__gt=hoy, fecha_inicio__lte=limite_salida).select_related('empleado'), '🚪', 'info', 'un permiso')
+
+    # HELPER REGRESOS
+    def agregar_regreso(queryset, icono, color, motivo):
+        for obj in queryset:
+            dias = (obj.fecha_fin - hoy).days + 1
+            tiempo_str = "Hoy" if dias == 0 else ("Mañana" if dias == 1 else f"En {dias} días")
+            lista_completa.append({'icono': icono, 'color': color, 'texto': f"<b>{obj.empleado.nombre} {obj.empleado.apellido}</b> vuelve de {motivo}.", 'tiempo': tiempo_str, 'url': reverse('detalle_empleado', args=[obj.empleado.id])})
+
+    agregar_regreso(SolicitudVacaciones.objects.filter(estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_regreso).select_related('empleado'), '🔄', 'success', 'vacaciones')
+    agregar_regreso(Licencia.objects.filter(estado='APROBADO', fecha_fin__gte=hoy, fecha_fin__lte=limite_regreso).select_related('empleado'), '🩺', 'success', 'licencia')
+
+    return render(request, 'core/todas_notificaciones.html', {'lista_completa': lista_completa})

@@ -44,10 +44,21 @@
                     
                     {% for field in form_vacacion %}
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
-                        {{ field }}
-                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
-                        {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% if field.name == 'solo_habiles' %}
+                            <div class="form-check form-switch d-flex align-items-center mt-4 pt-1">
+                                {{ field }}
+                                <label class="form-check-label fw-bold small text-secondary ms-1" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% else %}
+                            <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                            {{ field }}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% endif %}
                     </div>
                     {% endfor %}
                     
@@ -64,9 +75,21 @@
                     
                     {% for field in form_licencia %}
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
-                        {{ field }}
-                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% if field.name == 'solo_habiles' %}
+                            <div class="form-check form-switch d-flex align-items-center mt-4 pt-1">
+                                {{ field }}
+                                <label class="form-check-label fw-bold small text-secondary ms-1" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% else %}
+                            <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                            {{ field }}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% endif %}
                     </div>
                     {% endfor %}
                     
@@ -83,9 +106,21 @@
                     
                     {% for field in form_permiso %}
                     <div class="col-md-6">
-                        <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
-                        {{ field }}
-                        <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                        {% if field.name == 'solo_habiles' %}
+                            <div class="form-check form-switch d-flex align-items-center mt-4 pt-1">
+                                {{ field }}
+                                <label class="form-check-label fw-bold small text-secondary ms-1" for="{{ field.id_for_label }}">
+                                    {{ field.label }}
+                                </label>
+                            </div>
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% else %}
+                            <label class="form-label fw-bold small text-secondary">{{ field.label }}</label>
+                            {{ field }}
+                            <div class="text-danger small mt-1">{{ field.errors.0 }}</div>
+                            {% if field.help_text %}<div class="form-text small opacity-75">{{ field.help_text }}</div>{% endif %}
+                        {% endif %}
                     </div>
                     {% endfor %}
                     

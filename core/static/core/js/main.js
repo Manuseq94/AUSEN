@@ -82,3 +82,45 @@ function updateIcon(theme) {
         btnTheme.classList.replace('btn-outline-light', 'btn-outline-secondary'); 
     }
 }
+
+/* ==========================================
+   SISTEMA DE NOTIFICACIONES (RRHH)
+   ========================================== */
+document.addEventListener('DOMContentLoaded', function() {
+    const notiItems = document.querySelectorAll('.noti-item');
+    const badgeCount = document.getElementById('badgeNotisCount');
+    const redDot = document.getElementById('redDotNotis');
+
+    // 1. Buscamos qué notificaciones ya clickeó el usuario hoy
+    let leidas = JSON.parse(localStorage.getItem('ausen_notis_leidas')) || [];
+    let unreadCount = 0;
+
+    // 2. Revisamos cada notificación que mandó el servidor
+    notiItems.forEach(item => {
+        const notiId = item.getAttribute('data-noti-id');
+        
+        if (leidas.includes(notiId)) {
+            // Si ya está leída, le sacamos el fondo oscuro
+            item.classList.remove('unread-noti');
+        } else {
+            // Si no está leída, sumamos 1 al contador
+            unreadCount++;
+        }
+
+        // 3. Al hacer clic, la marcamos como leída en memoria
+        item.addEventListener('click', function() {
+            if (!leidas.includes(notiId)) {
+                leidas.push(notiId);
+                // Limpiamos historial viejo para no saturar memoria
+                if (leidas.length > 50) leidas.shift(); 
+                localStorage.setItem('ausen_notis_leidas', JSON.stringify(leidas));
+            }
+        });
+    });
+
+    // 4. Actualizamos los numeritos en el HTML
+    if (badgeCount) badgeCount.textContent = unreadCount;
+    if (redDot && unreadCount > 0) {
+        redDot.style.display = 'block';
+    }
+});
