@@ -98,19 +98,22 @@ def dashboard(request):
     licencias_pendientes = Licencia.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related('empleado').order_by('fecha_inicio')
     permisos_pendientes = Permiso.objects.filter(estado='PENDIENTE', empleado__activo=True).select_related('empleado').order_by('fecha_inicio')
 
-    # --- B. OPTIMIZACIÓN EXTREMA: AUSENTES HOY ---
-    # Delegamos a Postgres la tarea de buscar quién está ausente hoy sin traer registros basura
+    # --- B. OPTIMIZACIÓN EXTREMA: AUSENTES HOY (CONSOLIDADO) ---
+    # Delegamos a Postgres la tarea de buscar quién está ausente hoy (Vacaciones, Licencias o Permisos)
     q_vacaciones_hoy = SolicitudVacaciones.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
     q_licencias_hoy = Licencia.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
+    q_permisos_hoy = Permiso.objects.filter(empleado=OuterRef('pk'), estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy)
 
     empleados_ausentes = Empleado.objects.filter(activo=True).annotate(
         de_vacaciones=Exists(q_vacaciones_hoy),
-        de_licencia=Exists(q_licencias_hoy)
+        de_licencia=Exists(q_licencias_hoy),
+        de_permiso=Exists(q_permisos_hoy)
     ).filter(
-        Q(de_vacaciones=True) | Q(de_licencia=True)
+        Q(de_vacaciones=True) | Q(de_licencia=True) | Q(de_permiso=True)
     ).prefetch_related(
         Prefetch('solicitudes', queryset=SolicitudVacaciones.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='vacacion_actual'),
-        Prefetch('licencias', queryset=Licencia.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='licencia_actual')
+        Prefetch('licencias', queryset=Licencia.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='licencia_actual'),
+        Prefetch('permisos', queryset=Permiso.objects.filter(estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy), to_attr='permiso_actual')
     )
 
     lista_ausentes = []
@@ -119,16 +122,29 @@ def dashboard(request):
 
     for emp in empleados_ausentes:
         total_ausentes_real += 1
-        # Si tiene licencia, pisa a las vacaciones en prioridad de visualización
+        
+        # Prioridad 1: Licencias Médicas / Especiales
         if emp.de_licencia and emp.licencia_actual:
             lic = emp.licencia_actual[0]
             lista_ausentes.append({
-                'empleado': emp, 'hasta': lic.fecha_fin, 'motivo': lic.get_tipo_display(), 'es_licencia': True, 'empleado_id': emp.id
+                'empleado': emp, 'hasta': lic.fecha_fin, 'motivo': lic.get_tipo_display(), 'es_licencia': True, 'empleado_id': emp.id,
+                'icono': '🏥', 'color': 'danger', 'url': reverse('detalle_empleado', args=[emp.id])
             })
+        
+        # Prioridad 2: Permisos Cortos / Home Office / Trámites
+        elif emp.de_permiso and emp.permiso_actual:
+            per = emp.permiso_actual[0]
+            lista_ausentes.append({
+                'empleado': emp, 'hasta': per.fecha_fin, 'motivo': 'Permiso', 'es_licencia': False, 'empleado_id': emp.id,
+                'icono': '🚪', 'color': 'info', 'url': reverse('detalle_empleado', args=[emp.id])
+            })
+            
+        # Prioridad 3: Vacaciones Anuales
         elif emp.de_vacaciones and emp.vacacion_actual:
             vac = emp.vacacion_actual[0]
             lista_ausentes.append({
-                'empleado': emp, 'hasta': vac.fecha_fin, 'motivo': 'Vacaciones', 'es_licencia': False, 'empleado_id': emp.id
+                'empleado': emp, 'hasta': vac.fecha_fin, 'motivo': 'Vacaciones', 'es_licencia': False, 'empleado_id': emp.id,
+                'icono': '✈️', 'color': 'primary', 'url': reverse('detalle_empleado', args=[emp.id])
             })
             solo_vacaciones += 1
 
@@ -164,7 +180,6 @@ def dashboard(request):
     lista_regresos.sort(key=lambda x: x['fecha_retorno'])
 
     # --- D. SE VAN PRONTO (Próximos 7 días) ---
-    # Acá usamos list comprehensions sencillas porque las salidas futuras suelen ser pocas y ya usamos select_related
     limite_salida = hoy + timedelta(days=7)
     lista_salidas = []
 
@@ -178,7 +193,7 @@ def dashboard(request):
 
     lista_salidas.sort(key=lambda x: x['fecha_inicio'])
 
-    # --- E. CONTADORES ---
+    # --- E. CONTADORES (Actualizados con la métrica real de ausencias) ---
     total_empleados = Empleado.objects.filter(activo=True).count()
     presentes = max(0, total_empleados - total_ausentes_real)
 
@@ -199,11 +214,13 @@ def dashboard(request):
         'pendientes': pendientes,
         'licencias_pendientes': licencias_pendientes,
         'permisos_pendientes': permisos_pendientes,
-        'ausentes': lista_ausentes,
+        'ausentes': lista_ausentes,          # Mantiene compatibilidad con tu código actual
+        'lista_ausentes': lista_ausentes,    # Para el bucle del nuevo Modal
         'proximos_regresos': lista_regresos,
         'proximas_salidas': lista_salidas,
         'total_empleados': total_empleados,
         'total_ausentes': solo_vacaciones,
+        'ausentes_count': total_ausentes_real, # El número total que va a mostrar el frente de la tarjeta
         'total_ausentes_real': total_ausentes_real,
         'presentes': presentes,
         'hoy': hoy,
@@ -211,7 +228,6 @@ def dashboard(request):
         'grafico_barras_data': datos_mensuales,
     }
     return render(request, 'core/dashboard.html', context)
-
 
 # --- GESTIÓN DE FERIADOS ---
 @login_required
@@ -657,13 +673,10 @@ def lista_empleados(request):
     filtro_rapido = request.GET.get('filtro')
     hoy = timezone.now().date()
 
-    if filtro_rapido == 'vacaciones':
-        ids_vacaciones = SolicitudVacaciones.objects.filter(
-            estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy
-        ).values_list('empleado_id', flat=True)
-        empleados = empleados.filter(id__in=ids_vacaciones)
-
-    elif filtro_rapido == 'presentes':
+    # --- 1. FILTROS RÁPIDOS DESDE EL DASHBOARD ---
+    
+    # Agrupamos la lógica de Ausentes y Presentes porque usan la misma base de datos
+    if filtro_rapido in ['ausentes', 'presentes']:
         ids_vacaciones = SolicitudVacaciones.objects.filter(
             estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy
         ).values_list('empleado_id', flat=True)
@@ -671,10 +684,28 @@ def lista_empleados(request):
         ids_licencias = Licencia.objects.filter(
             estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy
         ).values_list('empleado_id', flat=True)
+        
+        ids_permisos = Permiso.objects.filter(
+            estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy
+        ).values_list('empleado_id', flat=True)
 
-        ids_ausentes = list(ids_vacaciones) + list(ids_licencias)
-        empleados = empleados.exclude(id__in=ids_ausentes)
+        # Unimos todas las listas y usamos set() para eliminar IDs duplicados 
+        # (por si alguien tiene un permiso y unas vacaciones solapadas por error)
+        ids_ausentes_hoy = set(list(ids_vacaciones) + list(ids_licencias) + list(ids_permisos))
 
+        if filtro_rapido == 'ausentes':
+            empleados = empleados.filter(id__in=ids_ausentes_hoy)
+        elif filtro_rapido == 'presentes':
+            empleados = empleados.exclude(id__in=ids_ausentes_hoy)
+
+    # Mantenemos el filtro individual de vacaciones por si tenés un acceso directo
+    elif filtro_rapido == 'vacaciones':
+        ids_vacaciones = SolicitudVacaciones.objects.filter(
+            estado='APROBADO', fecha_inicio__lte=hoy, fecha_fin__gte=hoy
+        ).values_list('empleado_id', flat=True)
+        empleados = empleados.filter(id__in=ids_vacaciones)
+
+    # --- 2. FILTROS DE BÚSQUEDA Y SECTOR ---
     busqueda = request.GET.get('q')
     if busqueda:
         empleados = empleados.filter(
