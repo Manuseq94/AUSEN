@@ -2,7 +2,7 @@
 
 {% block title %}Permiso_{{ empleado.apellido }}{% endblock %}
 
-{% block header_title %}Solicitud de Permiso / Home Office{% endblock %}
+{% block header_title %}Solicitud de Permiso / Excepción{% endblock %}
 {% block header_subtitle %}Formulario de registro interno - Recursos Humanos{% endblock %}
 
 {% block content %}
@@ -19,7 +19,7 @@
 <div class="info-box">
     <table class="info-table">
         <tr>
-            <td width="40%"><span class="label">Tipo de Permiso</span><span class="value-highlight">{{ permiso.get_tipo_display }}</span></td>
+            <td width="40%"><span class="label">Tipo de Autorización</span><span class="value-highlight">{{ permiso.get_tipo_display }}</span></td>
             <td width="30%"><span class="label">Desde</span><span class="value">{{ permiso.fecha_inicio|date:"d/m/Y" }}</span></td>
             <td width="30%"><span class="label">Hasta</span><span class="value">{{ permiso.fecha_fin|date:"d/m/Y" }}</span></td>
         </tr>
@@ -46,16 +46,26 @@
     </tr>
 </table>
 
-<table class="firmas-table">
+<!-- NUEVO: CLÁUSULA LEGAL SOLO PARA ADELANTOS -->
+{% if permiso.tipo == 'ADELANTO' %}
+<div class="alert-danger" style="margin-top: 20px; margin-bottom: 20px;">
+    ⚠️ ACUERDO DE ADELANTO VACACIONAL:<br>
+    <span style="font-weight: normal; display: block; margin-top: 5px;">
+        De manera excepcional y por razones de buena fe, la empresa otorga al empleado un <strong>Adelanto Vacacional</strong> correspondiente a <strong>{{ permiso.dias_totales }} días</strong>. Mediante la firma de este documento, el empleado presta expresa conformidad y acepta que dichos días <strong>serán descontados automáticamente</strong> del goce de su próximo período de Licencia Anual Ordinaria exigible.
+    </span>
+</div>
+{% endif %}
+
+<table class="firmas-table" style="margin-top: 40px;">
     <tr>
         <td>
             <div class="firma-line"></div>
             <div class="firma-name">{{ empleado.apellido }}, {{ empleado.nombre }}</div>
-            <div class="firma-role">Firma del Empleado</div>
+            <div class="firma-role">Firma del Empleado y Aclaración</div>
         </td>
         <td>
             <div class="firma-line"></div>
-            <div class="firma-name">Autorización Gerencia</div>
+            <div class="firma-name">Autorización Gerencia / RRHH</div>
             <div class="firma-role">Firma y Sello</div>
         </td>
     </tr>

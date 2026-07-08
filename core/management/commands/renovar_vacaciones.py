@@ -4,16 +4,14 @@ from core.models import Empleado, BolsaVacaciones, AuditoriaSaldo
 from django.contrib.auth.models import User
 import datetime
 
-
 class Command(BaseCommand):
-    help = 'Carga automática de vacaciones (LCT Argentina)'
+    help = 'Carga automática de vacaciones (LCT Argentina) con descuento de adelantos'
 
     def handle(self, *args, **kwargs):
         hoy = timezone.now().date()
 
         # 1. CANDADO DE FECHA 🔒
         if hoy.month < 10:
-            # Mensaje especial para el dashboard
             self.stdout.write("⛔ DENEGADO: Aún no es 1 de Octubre. No se realizaron cambios.")
             return
 
@@ -38,7 +36,6 @@ class Command(BaseCommand):
             delta = fecha_calculo - emp.fecha_ingreso
             dias_antiguedad = delta.days
 
-            dias_corresponden = 0
             if antiguedad_anios >= 20:
                 dias_corresponden = 35
             elif antiguedad_anios >= 10:
@@ -51,24 +48,31 @@ class Command(BaseCommand):
                 dias_corresponden = dias_antiguedad // 20
 
             if dias_corresponden > 0:
+                # 👇 NUEVO: Calcular si el empleado tuvo Adelantos Vacacionales este año
+                adelantos = emp.permisos.filter(tipo='ADELANTO', estado='APROBADO', fecha_inicio__year=anio_a_cargar)
+                dias_adelantados = sum((p.fecha_fin - p.fecha_inicio).days + 1 for p in adelantos)
+                
+                # Descuento matemático evitando números negativos
+                saldo_final = max(0, dias_corresponden - dias_adelantados)
+
                 BolsaVacaciones.objects.create(
                     empleado=emp,
                     anio=anio_a_cargar,
-                    dias_restantes=dias_corresponden,  # Ajusta según tus campos
-                    fecha_vencimiento=datetime.date(anio_a_cargar + 2, 12, 31)
+                    dias_otorgados=dias_corresponden,
+                    dias_restantes=saldo_final,
+                    # fecha_vencimiento=datetime.date(anio_a_cargar + 2, 12, 31) # Descomentar si usás vencimientos
                 )
-                # Auditoría silenciosa
+                
+                # Auditoría
                 AuditoriaSaldo.objects.create(
                     autor=usuario_sistema,
                     empleado=emp,
-                    accion=f"🤖 Renovación {anio_a_cargar}: +{dias_corresponden} días."
+                    accion=f"🤖 Renovación {anio_a_cargar}: +{dias_corresponden} legales. Descuento de {dias_adelantados} adelantos. Saldo final: {saldo_final}."
                 )
                 contador_nuevos += 1
 
         # 4. MENSAJE FINAL INTELIGENTE 🧠
         if contador_nuevos > 0:
-            self.stdout.write(
-                f"✅ ÉXITO: Se cargaron vacaciones a {contador_nuevos} empleados para el año {anio_a_cargar}.")
+            self.stdout.write(f"✅ ÉXITO: Se cargaron vacaciones a {contador_nuevos} empleados para el año {anio_a_cargar}.")
         else:
-            self.stdout.write(
-                f"👌 SIN CAMBIOS: Las vacaciones del año {anio_a_cargar} ya estaban cargadas para todo el personal.")
+            self.stdout.write(f"👌 SIN CAMBIOS: Las vacaciones del año {anio_a_cargar} ya estaban cargadas para todo el personal.")

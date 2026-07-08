@@ -327,6 +327,13 @@ def detalle_empleado(request, empleado_id):
 
     hoy = timezone.now().date()
     proximos_feriados = Feriado.objects.filter(fecha__gte=hoy).order_by('fecha')[:3]
+    
+    anio_actual = timezone.now().year
+    adelantos_pendientes = empleado.permisos.filter(
+        tipo='ADELANTO', 
+        estado='APROBADO', 
+        fecha_inicio__year=anio_actual
+    ).order_by('fecha_inicio')
 
     context = {
         'empleado': empleado,
@@ -340,6 +347,7 @@ def detalle_empleado(request, empleado_id):
         'form_documento': DocumentoForm() if request.user.is_staff else None,
         'proximos_feriados': proximos_feriados,
         'hoy': hoy,
+        'adelantos_pendientes': adelantos_pendientes,
     }
     return render(request, 'core/detalle_empleado.html', context)
 
@@ -761,6 +769,9 @@ def cargar_saldo_historico(request, empleado_id):
     if not request.user.is_staff: return redirect('home_redirect')
     empleado = get_object_or_404(Empleado, pk=empleado_id)
 
+    adelantos_este_anio = empleado.permisos.filter(tipo='ADELANTO', estado='APROBADO', fecha_inicio__year=timezone.now().year)
+    dias_adelantados = sum((p.fecha_fin - p.fecha_inicio).days + 1 for p in adelantos_este_anio)
+
     if request.method == 'POST':
         form = BolsaManualForm(request.POST, empleado=empleado)
         if form.is_valid():
@@ -786,8 +797,11 @@ def cargar_saldo_historico(request, empleado_id):
     else:
         form = BolsaManualForm(empleado=empleado)
 
-    return render(request, 'core/form_bolsa.html', {'form': form, 'empleado': empleado})
-
+    return render(request, 'core/form_bolsa.html', {
+        'form': form, 
+        'empleado': empleado,
+        'dias_adelantados': dias_adelantados # Mandamos la variable a la vista
+    })
 
 @login_required
 def editar_bolsa(request, bolsa_id):

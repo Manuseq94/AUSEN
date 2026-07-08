@@ -41,6 +41,22 @@
 
                     <div class="card-body p-4">
 
+                        {% if dias_adelantados > 0 %}
+                        <div class="alert alert-danger shadow-sm mb-4 border-start border-5 border-danger">
+                            <div class="d-flex gap-3 align-items-center">
+                                <span class="fs-2">💸</span>
+                                <div>
+                                    <h6 class="fw-bold mb-1">¡Atención! Adelanto Registrado</h6>
+                                    <p class="mb-0 small">
+                                        El empleado ya consumió <strong>{{ dias_adelantados }} días</strong> de <i>Adelanto Vacacional</i> en lo que va del año.
+                                        <br>
+                                        👉 Recuerda descontarlos manualmente de los días totales que estás a punto de cargar.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
                         {% if consumo > 0 %}
                         <div class="alert alert-warning shadow-sm mb-4 border-start border-5 border-warning">
                             <div class="d-flex gap-3 align-items-center">

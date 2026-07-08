@@ -401,6 +401,7 @@ class Permiso(RangoTemporalMixin):
         ('REMOTO', '🏠 Trabajo Remoto'),
         ('TRAMITE', '🏦 Trámite Personal / Salida Anticipada'),
         ('COMPENSATORIO', '⏱️ Franco Compensatorio'),
+        ('ADELANTO', '💸 Adelanto Vacacional'),
         ('OTRO', '📝 Otro Motivo'),
     ]
 
